@@ -1,5 +1,5 @@
-import { STATUSES } from '../../../constants.js';
 import * as cookie from 'cookie';
+import { STATUSES } from '../../../constants.js';
 
 export default class UserController {
   constructor(userService) {
@@ -42,12 +42,11 @@ export default class UserController {
         message: 'The user has been successfully registered',
         token: result,
       });
-    }else{
+    } else {
       res.status(STATUSES.Conflict).json({
-      message: 'Email address is exist',
-      })
+        message: 'Email address is exist',
+      });
     }
-    
   }
 
   async login(req, res) {
@@ -70,7 +69,6 @@ export default class UserController {
     }
   }
 
-
   async getByToken(req, res) {
     const cookies = cookie.parse(req.headers.cookie);
     const { token } = cookies;
@@ -79,11 +77,9 @@ export default class UserController {
       res.status(STATUSES.ServerError).json({
         message: 'Server Error.Try logging in again',
       });
-  
     }
     res.status(STATUSES.OK).json(result);
-  };
-
+  }
 
   async doctorLogin(req, res) {
     try {
@@ -94,7 +90,7 @@ export default class UserController {
       });
       res.status(STATUSES.OK).json(result);
     } catch (err) {
-      res.status(STATUSES.Unauthorized).json(err.message); 
-    };
-  };
+      res.status(STATUSES.Unauthorized).json(err.message);
+    }
+  }
 }

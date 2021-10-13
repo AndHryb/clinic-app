@@ -2,11 +2,9 @@ version: "3.8"
 
 services:
   app:
-    image: dima95/itrex-laba-project
+    image: anhryb/clinic-app:latest
     container_name: clinic
-    command: > 
-      sh -c "node main.js &&
-             node migration.js"
+    command: node main.js
     ports:
     - 3000:3000
     working_dir: /app
@@ -35,8 +33,8 @@ services:
     volumes:
     - my-sql-data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=dimozzz_4el
-      - MYSQL_DATABASE=hospital
+      - MYSQL_ROOT_PASSWORD=143234
+      - MYSQL_DATABASE=clinic_db
   redis:
     image: redis:6.2
     restart: always
@@ -47,7 +45,6 @@ services:
       retries: 30
 volumes:
     my-sql-data:
-
 
 
 

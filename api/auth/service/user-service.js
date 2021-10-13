@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-//import decodeToken from '../../../helpers/decode-token.js';
 import checkJwtToken from '../../../helpers/decode-token.js';
 import { WRONG_EMAIL_MSG, WRONG_PASS_MSG, USER_TYPE } from '../../../constants.js';
 
