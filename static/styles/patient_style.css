@@ -1,0 +1,106 @@
+html, body {
+    height: 100%;
+}
+
+header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    height: 50%;
+    border-bottom: 2px solid #b9bbbe;
+}
+.patient_info{
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.cur_patient{
+    font-size: 3em;
+}
+.patient_handler{
+    display: flex;
+    flex-direction: column;
+    justify-content:center;
+
+}
+.patient_form{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.form-control{
+    margin: 1em;
+}
+.btn {
+    height: 2em;
+    width: 10em;
+    margin: 1em;
+    border: 1px solid #968d8c;
+    border-radius: 2px;
+}
+.client_resolution{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    height: 70%;
+}
+.search_input{
+    width: 30%;
+    height: 2em;
+}
+.resolution_text{
+    width: 70%;
+    height: 10em;
+}
+.client_resolution_section{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 50%;
+    border-bottom: 2px solid #b9bbbe;
+}
+#patient_input_validation{
+    color: red;
+}
+
+.resolution_table {
+    border-collapse: collapse;
+    width: 80%;
+}
+
+.queue_table {
+    border-collapse: collapse;
+    width: 80%;
+}
+
+.resolution_table tr td {
+    border: 1px solid black;
+    padding: 4px;
+}
+
+.queue_table  tr td {
+    border: 1px solid black;
+    padding: 4px;
+}
+
+.resolution_table th {
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+}
+
+.queue_table th {
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+}
+#display_patient_name{
+    font-size: 1em;
+}
+
+

@@ -1,0 +1,24 @@
+html, body {
+    height: 100%;
+}
+
+.title{
+    margin: auto;
+    width: 70%;
+}
+.registration {
+    margin: 10%;
+    width: 70%;
+    border: 1px solid #6b6665 ;
+    border-radius: 2%;
+    padding: 10%;
+
+
+}
+#email_err, #password_err, #name_err, #birthday_err, #gender_err {
+    color: red;
+}
+.btn {
+    margin-top:10px;
+    border-color: #6b6665;
+}

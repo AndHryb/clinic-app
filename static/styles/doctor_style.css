@@ -1,0 +1,101 @@
+body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 33%;
+    border-bottom: 2px solid #b9bbbe;
+}
+.patient_info{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.cur_patient{
+    font-size:3em;
+}
+.choose_next{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+}
+
+.resolution_handler{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 33%;
+    border-bottom: 2px solid #b9bbbe;
+}
+.resolution{
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+    align-items: center;
+    width: 70%;
+    padding-top: 1em;
+}
+.resolution_label{
+    width: 30%;
+    padding-top: 1em;
+}
+.resolution_text{
+    height : 10em;
+}
+.add_btn{
+    align-self: flex-end;
+}
+.resolution_form{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 33%;
+    border-bottom: 2px solid #b9bbbe;
+}
+.resolution_search{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 20%;
+    padding: 1em;
+}
+
+.form-control{
+    margin: 1em;
+}
+.resolution_show{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 80%;
+    padding: 1em;
+}
+.btn {
+    height: 2em;
+    width: 10em;
+    margin: 1em;
+    border: 1px solid #968d8c;
+    border-radius: 2px;
+}
+
+.resolution_table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.resolution_table tr td {
+    border: 1px solid black;
+    padding: 4px;
+}
+
+.resolution_table th {
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+}

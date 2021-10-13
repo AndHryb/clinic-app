@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient registration</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="../styles/registration.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <h1 class="title">fill out the registration form</h1>
+        <div class="registration">
+            <form id= "reg_form" name="reg_form" method="post">
+                <div class="form-group">
+                    <label for="patient_email">Email address</label>
+                    <input type="email" class="form-control" id="patient_email" name="patient_email" aria-describedby="emailHelp">
+                    <small id="email_err" class="form-text text-muted"></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="patient_password">Password</label>
+                    <input type="password" class="form-control" id="patient_password" name="patient_password">
+                    <small id="password_err" class="form-text text-muted">.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="patient_name">Name</label>
+                    <input type="text" class="form-control" id="patient_name" name="patient_name">
+                    <small id="name_err" class="form-text text-muted">.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="patient_birthday">Name</label>
+                    <input type="date" class="form-control" id="patient_birthday" name="patient_birthday">
+                    <small id="birthday_err" class="form-text text-muted">.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="patient_gender">Gender</label>
+                    <select class="form-control" id="patient_gender" name="patient_gender">
+                        <option>male</option>
+                        <option>female</option>
+                    </select>
+                    <small id="gender_err" class="form-text text-muted">.</small>
+                </div>
+
+
+                <button type="submit" class="btn">Registration</button>
+            </form>
+
+        </div>
+    </div>
+    <script type="module" defer src="../scripts/auth-api.js"></script>
+    <script defer src="../scripts/registration.js" type="module"></script>
+</body>
+</html>

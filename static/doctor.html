@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Doctor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../styles/doctor_style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="container">
+    <header>
+        <a href="/patient">Patient page</a>
+        <div class="patient_info">
+            <div class="label_for_patient">
+                Current patient
+            </div>
+            <div class="cur_patient" id="display_patient_name_for_doctor">Stuck item value</div>
+        </div>
+        <div class="choose_next">
+            <button type="button" class="btn btn-default" id="next_btn">Next</button>
+            <span>Click next to process patient</span>
+        </div>
+
+    </header>
+    <section class="resolution_handler">
+        <div class="resolution_label">Set appointment resolution</div>
+        <div class="resolution">
+            <textarea class=" resolution_text form-control" id="resolution_text"
+                placeholder="Create resolution"></textarea>
+            <select id="speciality-list" hidden></select>
+            <button type="button" class="add_btn btn btn-default" id="btn_for_resolution">Add</button>
+        </div>
+    </section>
+    <section class="resolution_form form-group">
+        <div class="resolution_search">
+            <button type="button" class="btn btn-default" id='show_resolution_btn'>Show resolution</button>
+            <input class="form-control" id="show_resolution_input" placeholder="patient name">
+        </div>
+        <div class="resolution_show">
+            <table class="resolution_table" id="table_for_doctor_resolution" hidden>
+                <tr>
+                    <th>Resolution ID</th>
+                    <th>Content</th>
+                    <th>Speciality</th>
+                    <th>Patient Name</th>
+                    <th>Created By</th>
+                    <th>Created At</th>
+                </tr>
+            </table>
+            <div>
+                <button type="button" id="del_resolution_btn" class="btn btn-default">Delete</button>
+                <input class="form-control" type="text" id="del_resolution_id" placeholder="resolution ID">
+
+            </div>
+
+        </div>
+    </section>
+
+    <script type="module" defer src="../scripts/auth-api.js"></script>
+    <script type="module" defer src="../scripts/ui_listener_for_doctor.js"></script>
+</body>
+
+</html>
