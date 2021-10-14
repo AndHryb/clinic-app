@@ -27,7 +27,7 @@ class AuthApi {
       }
       return false;
     } catch (err) {
-      console.log(`Error ${err.name}: ${err.message}`);
+      console.log(err.response.data);
     }
   }
 
@@ -35,13 +35,14 @@ class AuthApi {
     try {
       const response = await this.client.post('/auth/registration', formData);
       const data = await response.data;
+      console.log(data);
       if (data.token) {
         this.token = `${data.token}`;
         return data.message;
       }
       return false;
     } catch (err) {
-      console.log(`Error ${err.name}: ${err.message}`);
+      console.log(err.response.data);
     }
   }
 

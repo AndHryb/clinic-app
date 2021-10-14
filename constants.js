@@ -4,6 +4,23 @@ export const MIN_LENGTH = 2;
 
 export const MIN_PASSWORD_LENGTH = 4;
 
+export const MESSAGES = {
+  WRONG_PASS: 'Wrong password.',
+  WRONG_EMAIL: 'Wrong email.',
+  NO_DOC: 'No such doctor.',
+  NO_PATIENT: 'So such patient.',
+  NO_RIGHT_TO_DELETE: 'No right to delete.',
+  EMAIL_EXIST: 'This email is already in use.',
+  EMAIL_NOT_FOUND: 'The email  was not found in the database,go to registration.',
+  REGISTRATION_OK: 'Successful registration.',
+  LOGIN_OK: 'Login successful.',
+  PASSWORD_NOT_MATCH: 'the password for this don\'t match.',
+  QUEUE_EMPTY: 'The queue is empty.',
+  ALL_QUEUES_EMPTY: 'The all queues is empty.',
+  RESOLUTIONS_NOT_FOUND: 'The resolution not found in the database.Make an appointment with a doctor.',
+  RESOLUTION_DELETED: 'The resolution deleted',
+};
+
 export const WRONG_PASS_MSG = 'wrong password';
 
 export const WRONG_EMAIL_MSG = 'wrong email';

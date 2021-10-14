@@ -16,40 +16,13 @@ const deleteResolutionID = document.getElementById('del_resolution_id');
 const dropDownSpec = document.getElementById('speciality-list');
 const spec = null;
 
-function arrSerialize(arr) {
-  if (typeof arr !== 'object') {
-    return false;
-  }
-
-  let value = '';
-
-  for (const elem of arr) {
-    let resolutionStr = '';
-    elem.resolutions.forEach((elem, i) => {
-      const result = `
-        resolution = ${elem.resolution}
-        resolutionId = ${elem.id}
-        `;
-      resolutionStr += result;
-    });
-    const str = `
-    name: ${elem.name},
-    resolutions :{ ${resolutionStr} }
-    registration date: ${new Date(elem.regTime)}
-    `;
-    value += str;
-  }
-
-  return value;
-}
-
 async function gettCurrent() {
   try {
     const response = await authClient.client.get('/patient/next-in-queue');
     const data = await response.data;
     return data;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 }
 
@@ -59,7 +32,7 @@ nextBtnForDoctor.addEventListener('click', async () => {
     const data = await response.data;
     displayPatientNameForDoctor.textContent = data;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 });
 
@@ -77,7 +50,7 @@ addBtnForResolution.addEventListener('click', async () => {
       console.log(`Resolution for ${data.name} added`);
     } else { console.log(data); }
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 
   doctorResolution.value = '';
@@ -155,7 +128,7 @@ showResolutionBtn.addEventListener('click', async () => {
     deleteResolutionBtn.before(tableForResolution);
     tableForResolution1 = tableForResolution;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 });
 deleteResolutionBtn.addEventListener('click', async () => {
@@ -163,7 +136,7 @@ deleteResolutionBtn.addEventListener('click', async () => {
     const response = await authClient.client.delete('/doctor/resolution', { data: { value: deleteResolutionID.value } });
     const data = await response.data;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 });
 
@@ -182,6 +155,6 @@ window.addEventListener('load', async () => {
       spec = specialities[0].name;
     }
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data);
   }
 });

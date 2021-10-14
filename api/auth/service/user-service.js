@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import checkJwtToken from '../../../helpers/decode-token.js';
-import { WRONG_EMAIL_MSG, WRONG_PASS_MSG, USER_TYPE } from '../../../constants.js';
+import { USER_TYPE, MESSAGES} from '../../../constants.js';
+import ApiError from '../../../error_handling/ApiError.js';
 
 export default class UserService {
   constructor(userRepository, patientRepository, doctorRepository) {
@@ -14,7 +15,7 @@ export default class UserService {
     try {
       const candidate = await this.userRepository.checkEmail(data.email);
       if (candidate) {
-        return false;
+        return ApiError.conflict(MESSAGES.EMAIL_EXIST);
       }
       const salt = bcrypt.genSaltSync(10);
       const { password } = data;
@@ -25,50 +26,35 @@ export default class UserService {
         birthday: new Date(data.birthday),
         userId: user.id,
       };
+      await this.patientRepository.add(options);
 
-      const patient = await this.patientRepository.add(options);
-      if (!patient) {
-        return false;
-      }
-
-      return this.getToken(user);
+      return this.createPatientToken(user);
     } catch (err) {
       console.log(`User service registration error :${err.name} : ${err.message}`);
-      throw new Error(err);
+      return err;
     }
   }
 
   async login(data) {
     try {
-      const resData = {
-        email: false,
-        password: false,
-        token: undefined,
-      };
       const candidate = await this.userRepository.checkEmail(data.email);
       if (!candidate) {
-        return resData;
+        return ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
       }
-      resData.email = true;
       const resultPassword = bcrypt.compareSync(data.password, candidate.password);
       if (!resultPassword) {
-        return resData;
+        return ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
       }
-      resData.password = true;
 
-      resData.token = this.getToken(candidate);
-
-      return resData;
+      return this.createPatientToken(candidate);
     } catch (err) {
       console.log(`User service login error :${err.name} : ${err.message}`);
+      return err;
     }
   }
 
   async getByToken(token) {
     try {
-      if (!token) {
-        return false;
-      }
       const decoded = await checkJwtToken(token);
       const { userId, role } = decoded;
       let result;
@@ -81,9 +67,9 @@ export default class UserService {
       return result;
     } catch (err) {
       console.log(`User service getByPatientToken error :${err.name} : ${err.message}`);
+      return err;
     }
   }
-
 
   async getByUserId(userId) {
     try {
@@ -91,10 +77,30 @@ export default class UserService {
       return result;
     } catch (err) {
       console.log(`User service getByToken error :${err.name} : ${err.message}`);
+      return err;
     }
   }
 
-  getToken(data) {
+  async doctorLogin(email, currPassword) {
+    try {
+      const candidate = await this.userRepository.checkEmail(email);
+      if (!candidate) {
+        return ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
+      }
+      const isPasswordMatches = await bcrypt.compare(currPassword, candidate.password);
+      if (!isPasswordMatches) {
+        return ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
+      }
+      const token = await this.createDoctorToken(candidate);
+
+      return token;
+    } catch (err) {
+      console.log(`User service doctorLogin error :${err.name} : ${err.message}`);
+      return err;
+    }
+  }
+
+  createPatientToken(data) {
     const token = jwt.sign({
       email: data.email,
       userId: data.id,
@@ -104,21 +110,10 @@ export default class UserService {
     return token;
   }
 
-  async doctorLogin(email, currPassword) {
-    const { password, id } = await this.userRepository.checkEmail(email);
-    if (!password) throw new Error(WRONG_EMAIL_MSG);
-
-    const isPasswordMatches = await bcrypt.compare(currPassword, password);
-    if (!isPasswordMatches) throw new Error(WRONG_PASS_MSG);
-
-    const token = await this.createDoctorToken(id);
-
-    return token;
-  }
-
-  async createDoctorToken(id) {
+  createDoctorToken(data) {
     const token = jwt.sign({
-      userId: id,
+      email: data.email,
+      userId: data.id,
       role: 'doctor',
     }, process.env.JWT_KEY);
 

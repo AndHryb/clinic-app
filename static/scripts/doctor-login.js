@@ -5,24 +5,27 @@ const passwordInput = document.getElementById('patient_password');
 btn.addEventListener('click', submitForm);
 
 async function submitForm(event) {
-    if (event.type === 'keydown' && event.keyCode !== 13) return;
+  if (event.type === 'keydown' && event.keyCode !== 13) return;
 
-    const email = emailInput.value;
-    const password = passwordInput.value;
-
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  try {
     const response = await fetch('/auth/login/doctor', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json;charset=utf-8',
-        },
-        body: JSON.stringify({ email, password }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+      },
+      body: JSON.stringify({ email, password }),
     });
-    
+
     if (response.ok) {
-        const res = await response.json();
-        window.location.href = 'http://localhost:3000/doctor';
+      const res = await response.json();
+      window.location.href = 'http://localhost:3000/doctor';
     } else {
-        const res = await response.json();
-        console.log(res);
+      const res = await response.json();
+      console.log(res);
     }
+  } catch (err) {
+    console.log(err.response.data);
+  }
 }

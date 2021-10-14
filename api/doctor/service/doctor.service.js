@@ -1,4 +1,5 @@
-import { NO_DOC_MSG } from '../../../constants.js';
+import { MESSAGES } from '../../../constants.js';
+import ApiError from '../../../error_handling/ApiError.js';
 
 export default class DoctorService {
   constructor(repository) {
@@ -6,37 +7,44 @@ export default class DoctorService {
   }
 
   async getDoctors() {
-    const res = await this.repository.getDoctors();
-    if (!res) throw new Error(NO_DOC_MSG);
+    try {
+      const res = await this.repository.getDoctors();
+      if (!res) {
+        return ApiError.notFound(MESSAGES.NO_DOC);
+      }
 
-    return res;
+      return res;
+    } catch (err) {
+      console.log(`Doctor service getDoctors error :${err.name} : ${err.message}`);
+      return err;
+    }
   }
 
   async getByUserId(userId) {
-    const res = await this.repository.getByUserId(userId);
-    if (!res) throw new Error(NO_DOC_MSG);
+    try {
+      const res = await this.repository.getByUserId(userId);
+      if (!res) {
+        return ApiError.notFound(MESSAGES.NO_DOC_MSG);
+      }
 
-    return res;
+      return res;
+    } catch (err) {
+      console.log(`Doctor service getByUserId error :${err.name} : ${err.message}`);
+      return err;
+    }
   }
 
   async getSpecByUserId(userId) {
-    const res = await this.repository.getSpecByUserId(userId);
-    if (!res) throw new Error(NO_DOC_MSG);
+    try {
+      const res = await this.repository.getSpecByUserId(userId);
+      if (!res) {
+        return ApiError.notFound(MESSAGES.NO_DOC);
+      }
 
-    return res;
-  }
-
-  async getSpec(docId) {
-    const res = await this.repository.getSpec(docId);
-    if (!res) throw new Error(NO_DOC_MSG);
-
-    return res;
-  }
-
-  async getById(id) {
-    const res = await this.repository.getById(id);
-    if (!res) throw new Error(NO_DOC_MSG);
-
-    return res;
+      return res;
+    } catch (err) {
+      console.log(`Doctor service getSpecByUserId error :${err.name} : ${err.message}`);
+      return err;
+    }
   }
 }

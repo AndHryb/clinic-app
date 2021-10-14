@@ -22,17 +22,8 @@ addBtnForPatientName.addEventListener('click', async () => {
     response = await response.json();
     console.log(response);
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data);
   }
-
-  /*
-  try {
-    const response = await authClient.client.post('patient/in-queue');
-    const data = await response.data;
-    console.log(data);
-  } catch (err) {
-    console.log('Request failed', err);
-  } */
 });
 
 // const subscribe = async () => {
@@ -90,9 +81,8 @@ window.addEventListener('load', async () => {
     });
     displayPatientName.appendChild(queueTable);
 
-    // displayPatientName.textContent = data;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 
   try {
@@ -100,7 +90,7 @@ window.addEventListener('load', async () => {
     const userData = await UserResponse.data;
     accountName.textContent = userData.name;
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 
   try {
@@ -133,7 +123,7 @@ window.addEventListener('load', async () => {
       });
     }
   } catch (err) {
-    console.log('Request failed', err);
+    console.log(err.response.data);
   }
 });
 window.addEventListener('load', async () => {
@@ -177,6 +167,6 @@ window.addEventListener('load', async () => {
 
     dropDownSpec.addEventListener('change', createDoctors);
   } catch (err) {
-    console.log(err);
+    console.log(err.response.data);
   }
 });

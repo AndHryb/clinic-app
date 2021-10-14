@@ -1,4 +1,4 @@
-import {authClient} from './auth-api.js';
+import { authClient } from './auth-api.js';
 
 const formObj = document.reg_form;
 
@@ -62,10 +62,10 @@ document.reg_form.onsubmit = async function (EO) {
   try {
     const result = await authClient.login(formData);
     document.cookie = `token=${authClient.token};path=/;`;
-    if(result){
+    if (result) {
       window.location = 'http://localhost:3000/patient';
     }
   } catch (err) {
-    console.log(`Request failed ${err.name} : ${err.message}`);
+    console.log(err.response.data);
   }
 };

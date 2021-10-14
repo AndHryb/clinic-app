@@ -34,6 +34,8 @@ jest.mock('../../../helpers/decode-token.js');// checkJwtToken
 
 const docData = { id: '444', name: 'Sergei' };
 
+const next = jest.fn();
+
 describe('queue controller unit tests', () => {
 
   test('first in queueRepository patient(queueRepository not empty)', async () => {
@@ -48,9 +50,9 @@ describe('queue controller unit tests', () => {
     checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     queueService.get.mockResolvedValue('Andrei');
-    await queueController.getNext(req,res);
-    expect(res.statusCode).toEqual(STATUSES.OK)
-    expect(res._getJSONData()).toEqual('Andrei')
+    await queueController.getNext(req, res, next);
+    expect(res.statusCode).toEqual(STATUSES.OK);
+    expect(res._getJSONData()).toEqual('Andrei');
   });
 
   test('first in queueRepository patient(queueRepository is empty)', async () => {
@@ -58,14 +60,14 @@ describe('queue controller unit tests', () => {
       method: 'GET',
       url: '/next-in-queue',
       headers: {
-        cookie: 'doctorToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+        cookie: 'doctorToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
       },
     });
     const res = httpMocks.createResponse();
     checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     queueService.get.mockResolvedValue(false);
-    await queueController.getNext(req,res);
+    await queueController.getNext(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.NotFound)
     expect(res._getJSONData()).toEqual('The queue is empty')
   });

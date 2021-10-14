@@ -1,5 +1,6 @@
 import decodeToken from '../../../helpers/decode-token.js';
-import { NO_RIGHT_TO_DELETE_MSG } from '../../../constants.js';
+import { MESSAGES } from '../../../constants.js';
+import ApiError from '../../../error_handling/ApiError.js';
 
 export default class ResolutionService {
   constructor(queueRepository, resolutionRepository, patientRepository, TTL) {
@@ -10,17 +11,19 @@ export default class ResolutionService {
   }
 
   async getResolutionsByName(name) {
-    const res = false;
     try {
       const resolutionList = await this.resolutionRepository.getByName(name);
-      if (!resolutionList) {
-        return res;
+      if (!resolutionList || resolutionList.getLength === 0) {
+        return ApiError.notFound(MESSAGES.NO_PATIENT);
       }
 
-      const resolutionListTTL = resolutionList.filter((elem) => this.TTL > (new Date()).getTime() - (new Date(elem.createdAt)).getTime());
+      const resolutionListTTL = resolutionList.filter(
+        (elem) => this.TTL > (new Date()).getTime() - (new Date(elem.createdAt)).getTime(),
+      );
       return resolutionListTTL;
     } catch (err) {
       console.log(`Resolution service add error :${err.name} : ${err.message}`);
+      return err;
     }
   }
 
@@ -29,9 +32,13 @@ export default class ResolutionService {
       const decoded = decodeToken(token);
       const patient = await this.patientRepository.getByUserId(decoded.userId);
       const result = await this.resolutionRepository.getByPatientId(patient.id);
+      if (!result) {
+        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+      }
       return result;
     } catch (err) {
       console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
+      return err;
     }
   }
 
@@ -39,12 +46,12 @@ export default class ResolutionService {
     try {
       const queueLength = await this.queueRepository.getLength(docId);
       if (queueLength === 0) {
-        return false;
+        return ApiError.conflict(MESSAGES.QUEUE_EMPTY);
       }
       const patientId = await this.queueRepository.delete(docId);
 
       if (!patientId) {
-        return false;
+        return ApiError.notFound(MESSAGES.NO_PATIENT);
       }
       await this.resolutionRepository.add({
         patientId, resolution, docId, spec,
@@ -53,6 +60,7 @@ export default class ResolutionService {
       return patientId;
     } catch (err) {
       console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
+      return err;
     }
   }
 
@@ -75,7 +83,10 @@ export default class ResolutionService {
   async delete(resolutionId, docId) {
     try {
       const isTheRightDoc = await this.isTheRightDoctor(resolutionId, docId);
-      if (!isTheRightDoc) throw new Error(NO_RIGHT_TO_DELETE_MSG);
+      if (!isTheRightDoc) {
+        return ApiError.forbidden(MESSAGES.NO_RIGHT_TO_DELETE);
+      }
+      if (isTheRightDoc instanceof ApiError) return isTheRightDoc;
       const result = await this.resolutionRepository.delete(resolutionId);
 
       return result;
@@ -86,10 +97,17 @@ export default class ResolutionService {
   }
 
   async isTheRightDoctor(resolutionId, docId) {
-    const resolution = await this.getById(resolutionId);
-    if (!resolution) throw new Error('not found');
+    try {
+      const resolution = await this.getById(resolutionId);
+      if (!resolution) {
+        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+      }
 
-    const { doctorId } = resolution;
-    return doctorId === docId;
+      const { doctorId } = resolution;
+      return doctorId === docId;
+    } catch (err) {
+      console.log(`Resolution service isTheRightDoctor error :${err.name} : ${err.message}`);
+      return err;
+    }
   }
 }
