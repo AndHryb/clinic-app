@@ -32,19 +32,19 @@ export default class DoctorRepository {
   async getSpecByUserId(userId) {
     const res = await this.specModel.findAll({
       attributes: ['name', 'id'],
-      include:  [
+      include: [
         {
           model: this.docModel,
           as: 'doctors',
           attributes: ['name'],
           where: {
-                userId,
-              },
+            userId,
+          },
         },
       ],
 
     });
-  
+
     return res;
   }
 

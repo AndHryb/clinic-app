@@ -29,16 +29,15 @@ userRouter.post('/login/doctor', async (req, res, next) => {
   if (ajv.validate(checkLoginFormShema, req.body)) {
     next();
   } else { res.status(STATUSES.BadRequest).json('Fill out the form with the correct data'); }
- }, userController.doctorLogin.bind(userController));
+}, userController.doctorLogin.bind(userController));
 
-userRouter.get('/username',userController.getByToken.bind(userController)) 
+userRouter.get('/username', userController.getByToken.bind(userController));
 
 userRouter.post('/registration', async (req, res, next) => {
   if (ajv.validate(checkRegistrationFormShema, req.body)) {
     next();
   } else { res.status(STATUSES.BadRequest).json('Fill out the form with the correct data'); }
-},userController.registration.bind(userController));
-
+}, userController.registration.bind(userController));
 
 userRouter.post('/login', async (req, res, next) => {
   if (ajv.validate(checkLoginFormShema, req.body)) {

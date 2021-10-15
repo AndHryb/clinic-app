@@ -24,7 +24,7 @@ export default class DoctorService {
     try {
       const res = await this.repository.getByUserId(userId);
       if (!res) {
-        return ApiError.notFound(MESSAGES.NO_DOC_MSG);
+        return ApiError.notFound(MESSAGES.NO_DOC);
       }
 
       return res;

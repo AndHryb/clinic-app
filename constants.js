@@ -17,8 +17,9 @@ export const MESSAGES = {
   PASSWORD_NOT_MATCH: 'the password for this don\'t match.',
   QUEUE_EMPTY: 'The queue is empty.',
   ALL_QUEUES_EMPTY: 'The all queues is empty.',
-  RESOLUTIONS_NOT_FOUND: 'The resolution not found in the database.Make an appointment with a doctor.',
+  RESOLUTIONS_NOT_FOUND: 'The resolution not found in the database.',
   RESOLUTION_DELETED: 'The resolution deleted',
+  RESOLUTION_EXPIRED: 'The resolution EXPIRED',
 };
 
 export const WRONG_PASS_MSG = 'wrong password';

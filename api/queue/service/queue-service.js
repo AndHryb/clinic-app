@@ -1,5 +1,5 @@
 import ApiError from '../../../error_handling/ApiError.js';
-import { MESSAGES } from '../../../constants.js'; 
+import { MESSAGES } from '../../../constants.js';
 
 export default class QueueService {
   constructor(patientRepository, queueRepository, doctorRepository) {
@@ -26,9 +26,7 @@ export default class QueueService {
   async add(patientId, docId) {
     try {
       const result = await this.queueRepository.add(patientId, docId);
-      if (!result) {
-        return ApiError.notFound(MESSAGES.NO_PATIENT);
-      }
+
       return result;
     } catch (err) {
       console.log(`QueueService add error : ${err.name} : ${err.message}`);
@@ -67,6 +65,10 @@ export default class QueueService {
           length: data[elem].length,
           next: patientData.name,
         });
+      }
+
+      if (queues.length === 0) {
+        return ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
       }
 
       return queues;

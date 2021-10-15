@@ -27,8 +27,8 @@ export default class UserService {
         userId: user.id,
       };
       await this.patientRepository.add(options);
-
-      return this.createPatientToken(user);
+      const token = this.createPatientToken(user);
+      return token;
     } catch (err) {
       console.log(`User service registration error :${err.name} : ${err.message}`);
       return err;
@@ -42,6 +42,7 @@ export default class UserService {
         return ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
       }
       const resultPassword = bcrypt.compareSync(data.password, candidate.password);
+      console.log(resultPassword);
       if (!resultPassword) {
         return ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
       }
@@ -58,7 +59,7 @@ export default class UserService {
       const decoded = await checkJwtToken(token);
       const { userId, role } = decoded;
       let result;
-      if (role == USER_TYPE.PATIENT) {
+      if (role === USER_TYPE.PATIENT) {
         result = await this.patientRepository.getByUserId(userId);
       } else {
         result = await this.doctorRepository.getByUserId(userId);
@@ -106,7 +107,6 @@ export default class UserService {
       userId: data.id,
       role: 'patient',
     }, process.env.JWT_KEY);
-
     return token;
   }
 

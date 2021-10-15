@@ -18,7 +18,7 @@ export default class QueueController {
       const { userId } = checkJwtToken(token);
       const patient = await this.userService.getByUserId(userId);
       const result = await this.queueService.add(patient.id, docID);
-      if (result instanceof Error) {
+      if (result instanceof ApiError) {
         next(result);
       } else {
         res.status(STATUSES.Created).json(result);
@@ -49,8 +49,8 @@ export default class QueueController {
   async getAllQueues(req, res, next) {
     try {
       const result = await this.queueService.getAll();
-      if (result.length === 0) {
-        next(ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY));
+      if (result instanceof ApiError) {
+        next(result);
       } else {
         res.status(STATUSES.OK).json(result);
       }

@@ -8,30 +8,38 @@ export default class UserController {
   }
 
   async checkDoctorToken(req, res, next) {
-    let checkToken;
-    if (req.headers.cookie) {
-      const cookies = cookie.parse(req.headers.cookie);
-      const { doctorToken } = cookies;
-      checkToken = await this.userService.getByToken(doctorToken);
-    }
-    if (checkToken) {
-      next();
-    } else {
-      res.redirect('/auth/doctor-login');
+    try {
+      let checkToken;
+      if (req.headers.cookie) {
+        const cookies = cookie.parse(req.headers.cookie);
+        const { doctorToken } = cookies;
+        checkToken = await this.userService.getByToken(doctorToken);
+      }
+      if (checkToken) {
+        next();
+      } else {
+        res.redirect('/auth/doctor-login');
+      }
+    } catch (err) {
+      next(err);
     }
   }
 
   async checkPatientToken(req, res, next) {
-    let checkToken;
-    if (req.headers.cookie) {
-      const cookies = cookie.parse(req.headers.cookie);
-      const { token } = cookies;
-      checkToken = await this.userService.getByToken(token);
-    }
-    if (checkToken) {
-      next();
-    } else {
-      res.redirect('/auth/patient-login');
+    try {
+      let checkToken;
+      if (req.headers.cookie) {
+        const cookies = cookie.parse(req.headers.cookie);
+        const { token } = cookies;
+        checkToken = await this.userService.getByToken(token);
+      }
+      if (checkToken) {
+        next();
+      } else {
+        res.redirect('/auth/patient-login');
+      }
+    } catch (err) {
+      next(err);
     }
   }
 

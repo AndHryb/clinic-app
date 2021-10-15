@@ -1,8 +1,10 @@
+import SequelizeMock from 'sequelize-mock';
+import redis from 'redis-mock';
 import QueueService from '../service/queue-service.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import QueueRedisRepository from '../repository/queue-redis-repository.js';
-import SequelizeMock from 'sequelize-mock';
-import redis from 'redis-mock';
+import ApiError from '../../../error_handling/ApiError.js';
+import { MESSAGES, STATUSES } from '../../../constants.js';
 
 const client = redis.createClient();
 const patientsSQLDBMock = new SequelizeMock();
@@ -20,6 +22,8 @@ describe('queue service unit tests', () => {
     name: 'Andrei',
     regTime: 1630189224236,
   };
+  const myError = ApiError.notFound('foo');
+  const serverErr = new Error('some error');
 
   test('method get', async () => {
     queueRedisRepository.get.mockResolvedValue(patientID);
@@ -32,7 +36,17 @@ describe('queue service unit tests', () => {
     queueRedisRepository.get.mockResolvedValue(false);
     patientSqlRepository.getById.mockResolvedValue(false);
     const res = await queueService.get();
-    expect(res).toBeFalsy();
+    expect(res).toBeInstanceOf(ApiError);
+    expect(res.message).toBe(MESSAGES.QUEUE_EMPTY);
+    expect(res.statusCode).toBe(STATUSES.NotFound);
+  });
+
+  test('method get(some err)', async () => {
+    queueRedisRepository.get = jest.fn(() => { throw serverErr; });
+    patientSqlRepository.getById.mockResolvedValue(false);
+    const res = await queueService.get();
+    expect(res).toBeInstanceOf(Error);
+    expect(res.message).toBe('some error');
   });
 
   test('method add', async () => {
@@ -41,10 +55,11 @@ describe('queue service unit tests', () => {
     expect(res).toEqual(patientID);
   });
 
-  test('method add(redis disconnect)', async () => {
-    queueRedisRepository.add.mockResolvedValue(undefined);
+  test('method add(some error)', async () => {
+    queueRedisRepository.add = jest.fn(() => { throw serverErr; });
     const res = await queueService.add(patientName);
-    expect(res).toEqual(false);
+    expect(res).toBeInstanceOf(Error);
+    expect(res.message).toBe('some error');
   });
 
   test('method delete', async () => {

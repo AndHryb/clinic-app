@@ -13,13 +13,16 @@ export default class ResolutionService {
   async getResolutionsByName(name) {
     try {
       const resolutionList = await this.resolutionRepository.getByName(name);
-      if (!resolutionList || resolutionList.getLength === 0) {
-        return ApiError.notFound(MESSAGES.NO_PATIENT);
+      if (!resolutionList || resolutionList.length === 0) {
+        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
       }
-
       const resolutionListTTL = resolutionList.filter(
         (elem) => this.TTL > (new Date()).getTime() - (new Date(elem.createdAt)).getTime(),
       );
+      if (!resolutionListTTL || resolutionListTTL.length === 0) {
+        return ApiError.notFound(MESSAGES.RESOLUTION_EXPIRED);
+      }
+
       return resolutionListTTL;
     } catch (err) {
       console.log(`Resolution service add error :${err.name} : ${err.message}`);
@@ -64,31 +67,17 @@ export default class ResolutionService {
     }
   }
 
-  async getById(resolutionId) {
-    try {
-      return await this.resolutionRepository.getById(resolutionId);
-    } catch (err) {
-      console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
-    }
-  }
-
-  async getByPatientId(patieniId) {
-    try {
-      return await this.resolutionRepository.getByPatientId(patieniId);
-    } catch (err) {
-      console.log(`Resolution service getByPatientId error :${err.name} : ${err.message}`);
-    }
-  }
-
   async delete(resolutionId, docId) {
     try {
       const isTheRightDoc = await this.isTheRightDoctor(resolutionId, docId);
       if (!isTheRightDoc) {
         return ApiError.forbidden(MESSAGES.NO_RIGHT_TO_DELETE);
       }
-      if (isTheRightDoc instanceof ApiError) return isTheRightDoc;
+      // if (isTheRightDoc instanceof ApiError) return isTheRightDoc;
       const result = await this.resolutionRepository.delete(resolutionId);
-
+      if (!result) {
+        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+      }
       return result;
     } catch (err) {
       console.log(`Resolution service delete error :${err.name} : ${err.message}`);
