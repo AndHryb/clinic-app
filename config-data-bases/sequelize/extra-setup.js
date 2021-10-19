@@ -1,5 +1,5 @@
 import pkg from 'sequelize';
-import { creator } from '../../helpers/dbSeed.js';
+//import { creator } from '../../helpers/seed-sql-data/dbSeed.js';
 
 const { DataTypes } = pkg;
 
@@ -57,8 +57,8 @@ export default function applyExtraSetup(sequelize) {
     as: 'doctors',
   });
 
-  sequelize.sync({ force: true })
+  sequelize.sync({ alter: true })
     .then(() => console.log('sync'))
-    .then(() => creator(doctorsSQLDB, usersSQLDB, specialtiesSQLDB))
+    //.then(() => creator(doctorsSQLDB, usersSQLDB, specialtiesSQLDB))
     .catch((error) => console.log('This error occurred', error));
 }

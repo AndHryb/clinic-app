@@ -6,8 +6,8 @@ COPY package*.json /app
 
 RUN npm install
 
-COPY . .
+COPY .  .
 
 EXPOSE 3000
-
+ 
 CMD ["node", "main.js"]
