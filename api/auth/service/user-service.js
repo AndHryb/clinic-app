@@ -72,9 +72,16 @@ export default class UserService {
     }
   }
 
-  async getByUserId(userId) {
+  async getByUserId(payload) {
     try {
-      const result = await this.patientRepository.getByUserId(userId);
+      const { userId, role } = payload;
+      let result;
+      if (role === USER_TYPE.PATIENT) {
+        result = await this.patientRepository.getByUserId(userId);
+      } else {
+        result = await this.doctorRepository.getByUserId(userId);
+      }
+
       return result;
     } catch (err) {
       console.log(`User service getByToken error :${err.name} : ${err.message}`);

@@ -1,6 +1,8 @@
 import { authClient } from './auth-api.js';
-
-authClient.getCookieToken('token');
+authClient.getCookieToken();
+if(!authClient.token){
+  window.location = './patient-login.html'
+}
 
 const displayPatientName = document.getElementById('display_patient_name');
 const accountName = document.getElementById('account_name');
@@ -11,16 +13,20 @@ const dropDownSpec = document.getElementById('speciality-list');
 addBtnForPatientName.addEventListener('click', async () => {
   const dropDownDoc = document.getElementById('doctors-list');
   try {
-    let response = await fetch('/patient/in-queue', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      body: JSON.stringify({ docID: dropDownDoc.value, spec: dropDownSpec.value }),
-    });
+    let response = await authClient.client.post('/queue', 
+    { docID: dropDownDoc.value, spec: dropDownSpec.value }
+    // {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json;charset=utf-8',
+    //   },
+    //   body: JSON.stringify({ docID: dropDownDoc.value, spec: dropDownSpec.value }),
+    // }
+    );
 
-    response = await response.json();
-    console.log(response);
+    //response = await response.json();
+    const data = await response.data;
+    console.log(data);
   } catch (err) {
     console.log(err.response.data);
   }
@@ -38,7 +44,7 @@ addBtnForPatientName.addEventListener('click', async () => {
 
 window.addEventListener('load', async () => {
   try {
-    const response = await authClient.client.get('/patient/all-queues');
+    const response = await authClient.client.get('/queue/all');
     const data = await response.data;
     console.log(data);
 
@@ -94,7 +100,7 @@ window.addEventListener('load', async () => {
   }
 
   try {
-    const response = await authClient.client.get('/doctor/resolution/me');
+    const response = await authClient.client.get('/resolution/me');
     const data = await response.data;
 
     if (data.resolution.length > 0) {

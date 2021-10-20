@@ -2,7 +2,6 @@ class AuthApi {
   constructor() {
     this.client = axios.create();
     this.token = undefined;
-    this.rr = 'lolol';
 
     this.client.interceptors.request.use((config) => {
       if (!this.token) {

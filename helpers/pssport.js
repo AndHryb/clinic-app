@@ -11,7 +11,7 @@ export default function checkToken(passport) {
   passport.use(
     new Strategy(options, async (payload, done) => {
       try {
-        const user = await injector.userService.getByUserId(payload.userId);
+        const user = await injector.userService.getByUserId(payload);
 
         if (user) {
           done(null, user);

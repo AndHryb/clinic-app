@@ -63,7 +63,7 @@ document.reg_form.onsubmit = async function (EO) {
     const result = await authClient.login(formData);
     document.cookie = `token=${authClient.token};path=/;`;
     if (result) {
-      window.location = 'http://localhost:3000/patient';
+      window.location = './patient.html';
     }
   } catch (err) {
     console.log(err.response.data);

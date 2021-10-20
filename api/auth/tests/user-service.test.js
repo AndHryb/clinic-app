@@ -150,19 +150,19 @@ describe('user service unit test', () => {
 
   test('get by userId ', async () => {
     patientSqlRepository.getByUserId.mockResolvedValue(patientData);
-    const res = await userService.getByUserId('111');
+    const res = await userService.getByUserId(payload);
     expect(res).toEqual(patientData);
   });
 
   test('get by userId, doesn\'t match ', async () => {
     patientSqlRepository.getByUserId.mockResolvedValue(false);
-    const res = await userService.getByUserId('111');
+    const res = await userService.getByUserId(payload);
     expect(res).toEqual(false);
   });
 
   test('get by userId, some error ', async () => {
     patientSqlRepository.getByUserId = jest.fn(() => { throw serverErr; });
-    const res = await userService.getByUserId('111');
+    const res = await userService.getByUserId(payload);
     expect(res).toBeInstanceOf(Error);
     expect(res.message).toBe('some error');
   });

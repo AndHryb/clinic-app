@@ -20,7 +20,7 @@ async function submitForm(event) {
 
     if (response.ok) {
       const res = await response.json();
-      window.location.href = 'http://localhost:3000/doctor';
+      window.location.href = './doctor.html';
     } else {
       const res = await response.json();
       console.log(res);

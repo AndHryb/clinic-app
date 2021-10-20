@@ -15,8 +15,8 @@ export default class QueueController {
       const cookies = cookie.parse(req.headers.cookie);
       const { token } = cookies;
       const { docID } = req.body;
-      const { userId } = checkJwtToken(token);
-      const patient = await this.userService.getByUserId(userId);
+      const payload = checkJwtToken(token);
+      const patient = await this.userService.getByUserId(payload);
       const result = await this.queueService.add(patient.id, docID);
       if (result instanceof ApiError) {
         next(result);
