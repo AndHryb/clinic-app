@@ -1,4 +1,4 @@
-import { STATUSES } from "../constants.js";
+import { STATUSES } from "../../constants.js";
 
 export default class ApiError {
   constructor(statusCode, message) {

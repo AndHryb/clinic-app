@@ -71,8 +71,9 @@ describe('user controller unit test', () => {
   });
 
   test('registration(email is already busy)', async () => {
-    userService.registration.mockResolvedValue(myError);
+    userService.registration = jest.fn(() => { throw myError; });
     await userController.registration(req, res, next);
+    expect(userService.registration).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
@@ -84,7 +85,7 @@ describe('user controller unit test', () => {
   });
 
   test('login(all ok)', async () => {
-    resData.token = '111';
+    resData.token = {token:'111', role: 'patient',};
     userService.login.mockResolvedValue(resData.token);
     await userController.login(req, res, next);
     expect(res.statusCode)
@@ -93,18 +94,21 @@ describe('user controller unit test', () => {
       .toEqual({
         message: MESSAGES.LOGIN_OK,
         token: '111',
+        role: 'patient'
       });
   });
 
   test('login(email not found)', async () => {
-    userService.login.mockResolvedValue(myError);
+    userService.login = jest.fn(() => { throw myError; });
     await userController.login(req, res, next);
+    expect(userService.login).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('login(the passwords don\'t match)', async () => {
-    userService.login.mockResolvedValue(myError);
+    userService.login = jest.fn(() => { throw myError; });
     await userController.login(req, res, next);
+    expect(userService.login).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 

@@ -18,6 +18,10 @@ export default function userModel(sequelize) {
     password: {
       type: DataTypes.STRING,
     },
+    role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   });
 
   return model;

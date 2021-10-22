@@ -20,17 +20,11 @@ export const MESSAGES = {
   RESOLUTIONS_NOT_FOUND: 'The resolution not found in the database.',
   RESOLUTION_DELETED: 'The resolution deleted',
   RESOLUTION_EXPIRED: 'The resolution EXPIRED',
+  TOKEN_NOT_FOUND: 'log in again and reload the page',
+  TOKEN_EXPIRED: 'JWT expired, log in again',
+  NO_USER: 'User not found in Database',
 };
 
-export const WRONG_PASS_MSG = 'wrong password';
-
-export const WRONG_EMAIL_MSG = 'wrong email';
-
-export const NO_DOC_MSG = 'no such doctor';
-
-export const NO_PATIENT_MSG = 'no such patient';
-
-export const NO_RIGHT_TO_DELETE_MSG = 'no right to delete';
 
 export const STATUSES = {
   OK: 200,

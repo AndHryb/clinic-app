@@ -17,7 +17,10 @@ services:
       PORT: 3000
       TTL: 30000
       REPOSITORY_HOST: redis
+      SQL_PASSWORD: 143234
       SQL_HOST: db
+      JWT_TTL: 600
+      JWT_KEY: 2hrtn1
     depends_on:
       db:
         condition: service_healthy

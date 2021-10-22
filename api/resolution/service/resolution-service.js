@@ -1,6 +1,5 @@
-import decodeToken from '../../../helpers/decode-token.js';
 import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 export default class ResolutionService {
   constructor(queueRepository, resolutionRepository, patientRepository, TTL) {
@@ -13,35 +12,25 @@ export default class ResolutionService {
   async getResolutionsByName(name) {
     try {
       const resolutionList = await this.resolutionRepository.getByName(name);
-      if (!resolutionList || resolutionList.length === 0) {
-        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
-      }
-      const resolutionListTTL = resolutionList.filter(
-        (elem) => this.TTL > (new Date()).getTime() - (new Date(elem.createdAt)).getTime(),
-      );
-      if (!resolutionListTTL || resolutionListTTL.length === 0) {
-        return ApiError.notFound(MESSAGES.RESOLUTION_EXPIRED);
-      }
+      const resolutionListTTL = this.filterTTL(resolutionList);
 
       return resolutionListTTL;
     } catch (err) {
       console.log(`Resolution service add error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
-  async getResolutionByToken(token) {
+  async getResolutionByUserId(userId) {
     try {
-      const decoded = decodeToken(token);
-      const patient = await this.patientRepository.getByUserId(decoded.userId);
+      const patient = await this.patientRepository.getByUserId(userId);
       const result = await this.resolutionRepository.getByPatientId(patient.id);
-      if (!result) {
-        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
-      }
-      return result;
+      const filtredList = this.filterTTL(result);
+     
+      return filtredList;
     } catch (err) {
-      console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
-      return err;
+      console.log(`Resolution service getResolutionByToken error :${err.name} : ${err.message}`);
+      throw err;
     }
   }
 
@@ -49,12 +38,12 @@ export default class ResolutionService {
     try {
       const queueLength = await this.queueRepository.getLength(docId);
       if (queueLength === 0) {
-        return ApiError.conflict(MESSAGES.QUEUE_EMPTY);
+        throw ApiError.conflict(MESSAGES.QUEUE_EMPTY);
       }
       const patientId = await this.queueRepository.delete(docId);
 
       if (!patientId) {
-        return ApiError.notFound(MESSAGES.NO_PATIENT);
+        throw ApiError.notFound(MESSAGES.NO_PATIENT);
       }
       await this.resolutionRepository.add({
         patientId, resolution, docId, spec,
@@ -63,7 +52,7 @@ export default class ResolutionService {
       return patientId;
     } catch (err) {
       console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -71,32 +60,44 @@ export default class ResolutionService {
     try {
       const isTheRightDoc = await this.isTheRightDoctor(resolutionId, docId);
       if (!isTheRightDoc) {
-        return ApiError.forbidden(MESSAGES.NO_RIGHT_TO_DELETE);
+        throw ApiError.forbidden(MESSAGES.NO_RIGHT_TO_DELETE);
       }
-      // if (isTheRightDoc instanceof ApiError) return isTheRightDoc;
       const result = await this.resolutionRepository.delete(resolutionId);
       if (!result) {
-        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+        throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
       }
       return result;
     } catch (err) {
       console.log(`Resolution service delete error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
   async isTheRightDoctor(resolutionId, docId) {
     try {
-      const resolution = await this.getById(resolutionId);
+      const resolution = await this.resolutionRepository.getById(resolutionId);
       if (!resolution) {
-        return ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+        throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
       }
-
       const { doctorId } = resolution;
       return doctorId === docId;
     } catch (err) {
       console.log(`Resolution service isTheRightDoctor error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
+  }
+
+  async filterTTL(resolutionList){
+    if (!resolutionList || resolutionList.length === 0) {
+      throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
+    }
+    const filtredList = resolutionList.filter(
+      (elem) => this.TTL > (new Date()).getTime() - (new Date(elem.createdAt)).getTime(),
+    );
+    if (!filtredList || filtredList.length === 0) {
+      throw ApiError.notFound(MESSAGES.RESOLUTION_EXPIRED);
+    }
+
+    return filtredList;
   }
 }

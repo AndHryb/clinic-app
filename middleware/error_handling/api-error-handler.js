@@ -1,5 +1,5 @@
 import ApiError from './ApiError.js';
-import { STATUSES } from '../constants.js';
+import { STATUSES } from '../../constants.js';
 
 export default function apiErrorHandler(err, req, res, next) {
   console.log(err);

@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs';
 
 export async function creator(docModel, userModel, specModel) {
   const users = [
-    { id: uuidv4(), email: 'asd@asd', name: 'Dima' },
-    { id: uuidv4(), email: 'kek@kek', name: 'Kat' },
-    { id: uuidv4(), email: 'kat@kat', name: 'Oleg' },
-    { id: uuidv4(), email: 'sas@sas', name: 'Joe' },
-    { id: uuidv4(), email: 'joe@joe', name: 'Clarc' },
+    { id: uuidv4(), email: 'asd@asd', name: 'Dima', role: 'doctor' },
+    { id: uuidv4(), email: 'kek@kek', name: 'Kat', role: 'doctor' },
+    { id: uuidv4(), email: 'kat@kat', name: 'Oleg', role: 'doctor' },
+    { id: uuidv4(), email: 'sas@sas', name: 'Joe', role: 'doctor' },
+    { id: uuidv4(), email: 'joe@joe', name: 'Clarc', role: 'doctor' },
   ];
 
   const specialities = [
@@ -25,11 +25,12 @@ export async function creator(docModel, userModel, specModel) {
     { docName: 'Kat', specName: 'gynecology' },
   ];
 
-  async function createPair(name, email, userId) {
+  async function createPair(name, email, userId, role) {
     await userModel.create({
       id: userId,
       password: bcrypt.hashSync('9876', 10),
       email,
+      role,
     });
 
     await docModel.create({
@@ -61,7 +62,7 @@ export async function creator(docModel, userModel, specModel) {
   }
 
   users.forEach(async (elem) => {
-    await createPair(elem.name, elem.email, elem.id);
+    await createPair(elem.name, elem.email, elem.id, elem.role);
   });
 
   specialities.forEach(async (elem) => {

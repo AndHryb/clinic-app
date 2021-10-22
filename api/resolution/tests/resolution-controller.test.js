@@ -40,6 +40,11 @@ describe('resolution controller unit test', () => {
 
   beforeEach(() => {
     next = jest.fn();
+    const payload = {
+      email: 'aaa@aaa',
+      userId: '111',
+      role: 'patient',
+    };
     myError = ApiError.notFound('foo');
     serverErr = new Error('some error');
     resolutionData1 = {
@@ -76,6 +81,7 @@ describe('resolution controller unit test', () => {
         cookie: 'doctorToken=111',
       },
       body: { docID: '111' },
+      payload : payload,
     });
     res = httpMocks.createResponse();
   });
@@ -90,8 +96,9 @@ describe('resolution controller unit test', () => {
   });
 
   test('get resolution by name(patient storage hasn\'t this name)', async () => {
-    resolutionService.getResolutionsByName.mockResolvedValue(myError);
+    resolutionService.getResolutionsByName = jest.fn(() => { throw myError; });
     await resolutionController.getResolutionsByName(req, res, next);
+    expect(resolutionService.getResolutionsByName).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
@@ -103,7 +110,6 @@ describe('resolution controller unit test', () => {
   });
 
   test('add resolution data(queueRepository has patient)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     resolutionService.addResolution.mockResolvedValue(patientData1);
     await resolutionController.addResolution(req, res, next);
@@ -114,14 +120,13 @@ describe('resolution controller unit test', () => {
   });
 
   test('add resolution data(queue empty)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
-    doctorService.getByUserId.mockResolvedValue(myError);
+    doctorService.getByUserId = jest.fn(() => { throw myError; });
     await resolutionController.addResolution(req, res, next);
+    expect(doctorService.getByUserId).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('add resolution data(server error)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId = jest.fn(() => { throw serverErr; });
     await resolutionController.addResolution(req, res, next);
     expect(doctorService.getByUserId).toThrow(serverErr);
@@ -129,7 +134,6 @@ describe('resolution controller unit test', () => {
   });
 
   test('delete resolution data(storage has key)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     resolutionService.delete.mockResolvedValue(patientData2);
     await resolutionController.deleteResolution(req, res, next);
@@ -140,15 +144,14 @@ describe('resolution controller unit test', () => {
   });
 
   test('delete resolution data(not found in dstabase or no right to delete)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
-    resolutionService.delete.mockResolvedValue(myError);
+    resolutionService.delete = jest.fn(() => { throw myError; });
     await resolutionController.deleteResolution(req, res, next);
+    expect(resolutionService.delete).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('delete resolution data(server error)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     resolutionService.delete = jest.fn(() => { throw serverErr; });
     await resolutionController.deleteResolution(req, res, next);
@@ -157,25 +160,23 @@ describe('resolution controller unit test', () => {
   });
 
   test('get resolution by token (token valid)', async () => {
-    req.headers.cookie = 'token=111';
-    resolutionService.getResolutionByToken.mockResolvedValue(resolutionData1);
+    resolutionService.getResolutionByUserId.mockResolvedValue(resolutionData1);
     await resolutionController.getResolutionByToken(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.OK);
     expect(res._getJSONData()).toEqual({ resolution: resolutionData1 });
   });
 
   test('get resolution by token (token invalid)', async () => {
-    req.headers.cookie = 'token=111';
-    resolutionService.getResolutionByToken.mockResolvedValue(myError);
+    resolutionService.getResolutionByUserId = jest.fn(() => { throw myError; });
     await resolutionController.getResolutionByToken(req, res, next);
+    expect(resolutionService.getResolutionByUserId).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('get resolution by token (server error)', async () => {
-    req.headers.cookie = 'token=111';
-    resolutionService.getResolutionByToken = jest.fn(() => { throw serverErr; });
+    resolutionService.getResolutionByUserId = jest.fn(() => { throw serverErr; });
     await resolutionController.getResolutionByToken(req, res, next);
-    expect(resolutionService.getResolutionByToken).toThrow(serverErr);
+    expect(resolutionService.getResolutionByUserId).toThrow(serverErr);
     expect(next).toHaveBeenCalledWith(serverErr);
   });
 });

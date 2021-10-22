@@ -1,8 +1,8 @@
 import { authClient } from './auth-api.js';
-authClient.getCookieToken();
-if(!authClient.token){
-  window.location = './patient-login.html'
-}
+authClient.getCookieToken('patient-token');
+// if(!authClient.token){
+//   window.location = './patient-login.html'
+// }
 
 const displayPatientName = document.getElementById('display_patient_name');
 const accountName = document.getElementById('account_name');
@@ -46,7 +46,7 @@ window.addEventListener('load', async () => {
   try {
     const response = await authClient.client.get('/queue/all');
     const data = await response.data;
-    console.log(data);
+    
 
     const queueTable = document.createElement('table');
     queueTable.setAttribute('class', 'queue_table');

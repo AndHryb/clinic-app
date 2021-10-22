@@ -4,7 +4,7 @@ import QueueService from '../service/queue-service.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import QueueRedisRepository from '../repository/queue-redis-repository.js';
 import ApiError from '../../../error_handling/ApiError.js';
-import { MESSAGES, STATUSES } from '../../../constants.js';
+import { STATUSES } from '../../../constants.js';
 
 const client = redis.createClient();
 const patientsSQLDBMock = new SequelizeMock();
@@ -33,20 +33,26 @@ describe('queue service unit tests', () => {
   });
 
   test('method get(queueRepository is empty)', async () => {
-    queueRedisRepository.get.mockResolvedValue(false);
-    patientSqlRepository.getById.mockResolvedValue(false);
-    const res = await queueService.get();
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.QUEUE_EMPTY);
-    expect(res.statusCode).toBe(STATUSES.NotFound);
+    try{
+      queueRedisRepository.get = jest.fn(() => { throw myError; });
+      patientSqlRepository.getById.mockResolvedValue(false);
+      await queueService.get();
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
   test('method get(some err)', async () => {
-    queueRedisRepository.get = jest.fn(() => { throw serverErr; });
-    patientSqlRepository.getById.mockResolvedValue(false);
-    const res = await queueService.get();
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+    try{
+      queueRedisRepository.get = jest.fn(() => { throw serverErr; });
+      patientSqlRepository.getById.mockResolvedValue(false);
+      await queueService.get();
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 
   test('method add', async () => {
@@ -56,10 +62,13 @@ describe('queue service unit tests', () => {
   });
 
   test('method add(some error)', async () => {
-    queueRedisRepository.add = jest.fn(() => { throw serverErr; });
-    const res = await queueService.add(patientName);
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+    try{
+      queueRedisRepository.add = jest.fn(() => { throw serverErr; });
+      await queueService.add(patientName);
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 
   test('method delete', async () => {
@@ -74,6 +83,16 @@ describe('queue service unit tests', () => {
     expect(res).toEqual(false);
   });
 
+  test('method delete(some error)', async () => {
+    try{
+      queueRedisRepository.delete = jest.fn(() => { throw serverErr; });
+      await queueService.delete(patientName);
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
   test('method getLength', async () => {
     queueRedisRepository.getLength.mockResolvedValue(3);
     const res = await queueService.getLength();
@@ -84,5 +103,15 @@ describe('queue service unit tests', () => {
     queueRedisRepository.getLength.mockResolvedValue(0); // empty
     const res = await queueService.getLength();
     expect(res).toEqual(0);
+  });
+
+  test('method getLength(some error)', async () => {
+    try{
+      queueRedisRepository.getLength = jest.fn(() => { throw serverErr; });
+      await queueService.getLength();
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 });

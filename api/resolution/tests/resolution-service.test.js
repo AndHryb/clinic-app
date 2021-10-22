@@ -34,8 +34,10 @@ describe('resolution service unit test', () => {
   const resolutionId = '111';
   const docId = '222';
   let serverErr;
+  let myError;
 
   beforeEach(() => {
+    myError = ApiError.notFound('foo');
     serverErr = new Error('some error');
     dataValues = {
       id: '111',
@@ -44,6 +46,7 @@ describe('resolution service unit test', () => {
       updatedAt: testRegTime2,
       patientId: '222',
     };
+
 
     patientData1 = {
       name: 'Andrei',
@@ -92,6 +95,31 @@ describe('resolution service unit test', () => {
       }];
   });
 
+ 
+  test('isTheRightDoctor check right', async () => {
+    resolutionSqlRepository.getById.mockResolvedValue({doctorId: docId});
+    const res = await resolutionService.isTheRightDoctor(resolutionId, docId);
+    expect(res).toEqual(true);
+    expect(resolutionSqlRepository.getById).toBeCalled();
+  });
+
+  test('isTheRightDoctor check right(no right)', async () => {
+    resolutionSqlRepository.getById.mockResolvedValue({doctorId: '111'});
+    const res = await resolutionService.isTheRightDoctor(resolutionId, docId);
+    expect(res).toEqual(false);
+    expect(resolutionSqlRepository.getById).toBeCalled();
+  });
+
+  test('isTheRightDoctor check right(some error)', async () => {
+    try{
+      resolutionSqlRepository.getById.mockResolvedValue(() =>{throw serverErr});
+    const res = await resolutionService.isTheRightDoctor(resolutionId, docId);
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
   test('get resolutions by name', async () => {
     resolutionSqlRepository.getByName.mockResolvedValue(patientList);
     const res = await resolutionService.getResolutionsByName('Andrei');
@@ -103,53 +131,69 @@ describe('resolution service unit test', () => {
   });
 
   test('get resolutions by name out ttl', async () => {
-    resolutionSqlRepository.getByName.mockResolvedValue(patientList1);
-    const res = await resolutionService.getResolutionsByName('Andrei');
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.RESOLUTION_EXPIRED);
-    expect(res.statusCode).toBe(STATUSES.NotFound);
+    try{
+      resolutionSqlRepository.getByName = jest.fn((() => { throw myError; }));
+      const res = await resolutionService.getResolutionsByName('Andrei');
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
   test('get resolutions by name (there is no match by name)', async () => {
-    resolutionSqlRepository.getByName.mockResolvedValue([]);
-    const res = await resolutionService.getResolutionsByName('Andrei');
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.RESOLUTIONS_NOT_FOUND);
-    expect(res.statusCode).toBe(STATUSES.NotFound);
+    try{
+      resolutionSqlRepository.getByName = jest.fn((() => { throw myError; }));
+      const res = await resolutionService.getResolutionsByName('Andrei');
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
   test('get resolutions by name (some err)', async () => {
-    resolutionSqlRepository.getByName = jest.fn((() => { throw serverErr; }));
-    const res = await resolutionService.getResolutionsByName('Andrei');
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+    try{
+      resolutionSqlRepository.getByName = jest.fn((() => { throw serverErr; }));
+      const res = await resolutionService.getResolutionsByName('Andrei');
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 
-  test('get resolution by token', async () => {
-    decodeToken.mockResolvedValue(userID);
+  test('get resolution by userId', async () => {
     patientSqlRepository.getByUserId.mockResolvedValue(patientData1);
-    resolutionSqlRepository.getByPatientId.mockResolvedValue(dataValues);
-    const res = await resolutionService.getResolutionByToken('asd');
-    expect(res).toEqual(dataValues);
+    resolutionSqlRepository.getByPatientId.mockResolvedValue(patientList);
+    const res = await resolutionService.getResolutionByUserId('asd');
+    expect(res[0].id).toBe('222');
+    expect(res[0].name).toBe('Andrei');
+    expect(res[0].gender).toBe('male');
+    expect(res[0].birthday).toBe('1993-02-19');
+    expect(res[0].userId).toBe('333');
   });
 
-  test('get resolution by token(token invalid)', async () => {
-    decodeToken.mockResolvedValue(userID);
-    patientSqlRepository.getByUserId.mockResolvedValue(patientData1);
-    resolutionSqlRepository.getByPatientId.mockResolvedValue(false);
-    const res = await resolutionService.getResolutionByToken('asd');
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.RESOLUTIONS_NOT_FOUND);
-    expect(res.statusCode).toBe(STATUSES.NotFound);
+  test('get resolution by userId(not found)', async () => {
+    try{
+      patientSqlRepository.getByUserId.mockResolvedValue(patientData1);
+      resolutionSqlRepository.getByPatientId = jest.fn(() => { throw myError; });
+      await resolutionService.getResolutionByUserId('asd');
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
-  test('get resolution by token(some error)', async () => {
-    decodeToken.mockResolvedValue(userID);
-    patientSqlRepository.getByUserId.mockResolvedValue(patientData1);
-    resolutionSqlRepository.getByPatientId = jest.fn(() => { throw serverErr; });
-    const res = await resolutionService.getResolutionByToken('asd');
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+  test('get resolution by userId(some error)', async () => {
+    try{
+      patientSqlRepository.getByUserId.mockResolvedValue(patientData1);
+      resolutionSqlRepository.getByPatientId = jest.fn(() => { throw serverErr; });
+      await resolutionService.getResolutionByUserId('asd');
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 
   test('add resolution(all ok)', async () => {
@@ -163,43 +207,25 @@ describe('resolution service unit test', () => {
   });
 
   test('add resolution (queue empty)', async () => {
-    queueRedisRepository.getLength.mockResolvedValue(0);
-    const res = await resolutionService.addResolution('bla bla');
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.QUEUE_EMPTY);
-    expect(res.statusCode).toBe(STATUSES.Conflict);
+    try{
+      queueRedisRepository.getLength = jest.fn(() => { throw myError; });
+      const res = await resolutionService.addResolution('bla bla');
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
   test('add resolution (some error)', async () => {
-    queueRedisRepository.getLength = jest.fn(() => { throw serverErr; });
-    const res = await resolutionService.addResolution('bla bla');
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+    try{
+      queueRedisRepository.getLength = jest.fn(() => { throw serverErr; });
+      const res = await resolutionService.addResolution('bla bla');
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
-
-  // test('get resolution data by resolution id(repository has data)', async () => {
-  //   resolutionSqlRepository.getById.mockResolvedValue(dataValues);
-  //   const res = await resolutionService.getById(resolutionId);
-  //   expect(res).toEqual(dataValues);
-  // });
-
-  // test('get resolution data by resolution id(repository hasn\'t data)', async () => {
-  //   resolutionSqlRepository.getById.mockResolvedValue(false);
-  //   const res = await resolutionService.getById(resolutionId);
-  //   expect(res).toEqual(false);
-  // });
-
-  // test('get resolution data by patient id(repository has data)', async () => {
-  //   resolutionSqlRepository.getByPatientId.mockResolvedValue(dataValues);
-  //   const res = await resolutionService.getByPatientId(patientId);
-  //   expect(res).toEqual(dataValues);
-  // });
-
-  // test('get resolution data by patient id(repository hasn\'t data)', async () => {
-  //   resolutionSqlRepository.getByPatientId.mockResolvedValue(false);
-  //   const res = await resolutionService.getByPatientId(resolutionId);
-  //   expect(res).toEqual(false);
-  // });
 
   test('delete resolution data(repository has data)', async () => {
     resolutionService.isTheRightDoctor = jest.fn(() => true);
@@ -211,28 +237,39 @@ describe('resolution service unit test', () => {
   });
 
   test('delete resolution data(no right to delete)', async () => {
-    resolutionService.isTheRightDoctor = jest.fn(() => false);
-    // resolutionSqlRepository.delete.mockResolvedValue(false);
-    const res = await resolutionService.delete(resolutionId, docId);
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.NO_RIGHT_TO_DELETE);
-    expect(res.statusCode).toBe(STATUSES.Forbidden);
+    try{
+      resolutionService.isTheRightDoctor = jest.fn(() => { throw myError; });
+      resolutionSqlRepository.delete.mockResolvedValue(false);
+      await resolutionService.delete(resolutionId, docId);
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
   test('delete resolution data(repository hasn\'t data)', async () => {
-    resolutionService.isTheRightDoctor = jest.fn(() => true);
-    resolutionSqlRepository.delete.mockResolvedValue(false);
-    const res = await resolutionService.delete(resolutionId, docId);
-    expect(res).toBeInstanceOf(ApiError);
-    expect(res.message).toBe(MESSAGES.RESOLUTIONS_NOT_FOUND);
-    expect(res.statusCode).toBe(STATUSES.NotFound);
+    try{
+      resolutionService.isTheRightDoctor = jest.fn(() =>  true );
+      resolutionSqlRepository.delete  = jest.fn(() => { throw myError; });
+      await resolutionService.delete(resolutionId, docId);
+    }catch(err){
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.NotFound);
+    }
   });
 
+   
   test('delete resolution data(some error)', async () => {
-    resolutionService.isTheRightDoctor = jest.fn(() => { throw serverErr; });
-    resolutionSqlRepository.delete.mockResolvedValue(false);
-    const res = await resolutionService.delete(resolutionId, docId);
-    expect(res).toBeInstanceOf(Error);
-    expect(res.message).toBe('some error');
+    try{
+      resolutionService.isTheRightDoctor = jest.fn(() => { throw serverErr; });
+      resolutionSqlRepository.delete.mockResolvedValue(false);
+      await resolutionService.delete(resolutionId, docId);
+    }catch(err){
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
+
 });

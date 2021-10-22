@@ -1,5 +1,5 @@
 import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 export default class DoctorService {
   constructor(repository) {
@@ -10,13 +10,13 @@ export default class DoctorService {
     try {
       const res = await this.repository.getDoctors();
       if (!res) {
-        return ApiError.notFound(MESSAGES.NO_DOC);
+        throw ApiError.notFound(MESSAGES.NO_DOC);
       }
 
       return res;
     } catch (err) {
       console.log(`Doctor service getDoctors error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -24,13 +24,13 @@ export default class DoctorService {
     try {
       const res = await this.repository.getByUserId(userId);
       if (!res) {
-        return ApiError.notFound(MESSAGES.NO_DOC);
+        throw ApiError.notFound(MESSAGES.NO_DOC);
       }
 
       return res;
     } catch (err) {
       console.log(`Doctor service getByUserId error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -38,13 +38,13 @@ export default class DoctorService {
     try {
       const res = await this.repository.getSpecByUserId(userId);
       if (!res) {
-        return ApiError.notFound(MESSAGES.NO_DOC);
+        throw ApiError.notFound(MESSAGES.NO_DOC);
       }
 
       return res;
     } catch (err) {
       console.log(`Doctor service getSpecByUserId error :${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 }

@@ -61,10 +61,15 @@ document.reg_form.onsubmit = async function (EO) {
 
   try {
     const result = await authClient.login(formData);
-    document.cookie = `token=${authClient.token};path=/;`;
-    if (result) {
+    console.log(result);
+    if (result.role === 'patient') {
+      document.cookie = `patient-token=${authClient.token};path=/;`;
       window.location = './patient.html';
+    }else if (result.role === 'doctor'){
+      document.cookie = `doctor-token=${authClient.token};path=/;`;
+      window.location = './doctor.html';
     }
+
   } catch (err) {
     console.log(err.response.data);
   }

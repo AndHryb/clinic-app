@@ -130,8 +130,8 @@ document.reg_form.onsubmit = async function (EO) {
 
   try {
     const result = await authClient.registration(formData);
-    document.cookie = `token=${authClient.token};path=/;`;
     if (result) {
+      document.cookie = `patient-token=${authClient.token};path=/;`;
       window.location = './patient.html';
     }
   } catch (err) {

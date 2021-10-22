@@ -1,8 +1,7 @@
 import * as httpMocks from 'node-mocks-http';
 import DoctorController from '../controller/doctor.controller.js';
 import DoctorService from '../service/doctor.service.js';
-import { STATUSES, NO_DOC_MSG } from '../../../constants.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
+import { STATUSES } from '../../../constants.js';
 import ApiError from '../../../error_handling/ApiError.js';
 
 const doctorController = new DoctorController(new DoctorService());
@@ -19,6 +18,11 @@ describe('doctor controller have to', () => {
   const specs = [{ spec: 'spec1' }, { spec: 'spec2' }, { spec: 'spec3' }];
 
   beforeEach(() => {
+    const payload = {
+      email: 'aaa@aaa',
+      userId: '111',
+      role: 'patient',
+    };
     next = jest.fn();
     myError = ApiError.notFound('foo');
     serverErr = new Error('some error');
@@ -29,6 +33,7 @@ describe('doctor controller have to', () => {
         cookie: 'doctorToken=111',
       },
       body: { docID: '111' },
+      payload: payload,
     });
     res = httpMocks.createResponse();
   });
@@ -46,8 +51,9 @@ describe('doctor controller have to', () => {
   });
 
   test('failed with get all doctors', async () => {
-    doctorService.getDoctors = jest.fn(() => myError);
+    doctorService.getDoctors = jest.fn(() => {throw myError});
     await doctorController.getDoctors(req, res, next);
+    expect(doctorService.getDoctors).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
@@ -59,7 +65,6 @@ describe('doctor controller have to', () => {
   });
 
   test('get specializations by user id', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getSpecByUserId = jest.fn(() => (specs));
     await doctorController.getSpecByUserId(req, res, next);
     expect(doctorService.getSpecByUserId).toBeCalled();
@@ -68,14 +73,13 @@ describe('doctor controller have to', () => {
   });
 
   test('failed with get specializations by user id', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
-    doctorService.getSpecByUserId = jest.fn(() => myError);
+    doctorService.getSpecByUserId = jest.fn(() => {throw myError});
     await doctorController.getSpecByUserId(req, res, next);
+    expect(doctorService.getSpecByUserId).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test(' get specializations by user id(server error)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getSpecByUserId = jest.fn(() => {throw serverErr});
     await doctorController.getSpecByUserId(req, res, next);
     expect(doctorService.getSpecByUserId).toThrow(serverErr);

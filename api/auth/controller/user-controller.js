@@ -1,59 +1,20 @@
 import * as cookie from 'cookie';
 import { STATUSES, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
+import extractJWT from '../../../helpers/extract-jwt.js';
 
 export default class UserController {
   constructor(userService) {
     this.userService = userService;
   }
 
-  async checkDoctorToken(req, res, next) {
-    try {
-      let checkToken;
-      if (req.headers.cookie) {
-        const cookies = cookie.parse(req.headers.cookie);
-        const { doctorToken } = cookies;
-        checkToken = await this.userService.getByToken(doctorToken);
-      }
-      if (checkToken) {
-        next();
-      } else {
-        res.redirect('/auth/doctor-login');
-      }
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async checkPatientToken(req, res, next) {
-    try {
-      let checkToken;
-      if (req.headers.cookie) {
-        const cookies = cookie.parse(req.headers.cookie);
-        const { token } = cookies;
-        checkToken = await this.userService.getByToken(token);
-      }
-      if (checkToken) {
-        next();
-      } else {
-        res.redirect('/auth/patient-login');
-      }
-    } catch (err) {
-      next(err);
-    }
-  }
-
   async registration(req, res, next) {
     try {
       const result = await this.userService.registration(req.body);
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
         res.status(STATUSES.Created).json({
           message: MESSAGES.REGISTRATION_OK,
           token: result,
         });
-      }
     } catch (err) {
       next(err);
     }
@@ -62,45 +23,23 @@ export default class UserController {
   async login(req, res, next) {
     try {
       const result = await this.userService.login(req.body);
-
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
         res.status(STATUSES.OK).json({
           message: MESSAGES.LOGIN_OK,
-          token: result,
+          token: result.token,
+          role: result.role,
         });
-      }
     } catch (err) {
       next(err);
     }
   }
 
-  async getByToken(req, res, next) {
+  async getByUserId(req, res, next) {
     try {
-      const cookies = cookie.parse(req.headers.cookie);
-      const { token } = cookies;
-      const result = await this.userService.getByToken(token);
+      const result = await this.userService.getByUserId(req.payload);
       res.status(STATUSES.OK).json(result);
     } catch (err) {
       next(err);
     }
   }
-
-  async doctorLogin(req, res, next) {
-    try {
-      const { email, password } = req.body;
-      const result = await this.userService.doctorLogin(email, password);
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
-        res.cookie('doctorToken', `${result}`, {
-          httpOnly: true,
-        });
-        res.status(STATUSES.OK).json(result);
-      }
-    } catch (err) {
-      next(err);
-    }
-  }
+  
 }

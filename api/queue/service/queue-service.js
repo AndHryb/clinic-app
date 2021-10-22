@@ -1,4 +1,4 @@
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 import { MESSAGES } from '../../../constants.js';
 
 export default class QueueService {
@@ -12,14 +12,14 @@ export default class QueueService {
     try {
       const result = await this.queueRepository.get(docId);
       if (!result) {
-        return ApiError.notFound(MESSAGES.QUEUE_EMPTY);
+        throw ApiError.notFound(MESSAGES.QUEUE_EMPTY);
       }
       const patient = await this.patientRepository.getById(result);
 
       return patient.name;
     } catch (err) {
       console.log(`Queue Service get error : ${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -30,7 +30,7 @@ export default class QueueService {
       return result;
     } catch (err) {
       console.log(`QueueService add error : ${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -39,7 +39,7 @@ export default class QueueService {
       return await this.queueRepository.delete();
     } catch (err) {
       console.log(`QueueService delete error : ${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -48,7 +48,7 @@ export default class QueueService {
       return await this.queueRepository.getLength();
     } catch (err) {
       console.log(`QueueService getLength error : ${err.name} : ${err.message}`);
-      return err;
+      throw err;
     }
   }
 
@@ -68,12 +68,13 @@ export default class QueueService {
       }
 
       if (queues.length === 0) {
-        return ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
+        throw ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
       }
 
       return queues;
     } catch (err) {
       console.log(`QueueService getAll error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 }

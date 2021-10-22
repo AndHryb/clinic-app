@@ -42,6 +42,11 @@ describe('queue controller unit tests', () => {
   let next;
   beforeEach(() => {
     next = jest.fn();
+    const payload = {
+      email: 'aaa@aaa',
+      userId: '111',
+      role: 'patient',
+    };
     myError = ApiError.notFound('foo');
     serverErr = new Error('some error');
     req = httpMocks.createRequest({
@@ -50,11 +55,11 @@ describe('queue controller unit tests', () => {
       headers: {
         cookie: 'doctorToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
       },
+      payload: payload,
     });
     res = httpMocks.createResponse();
   });
   test('first in queueRepository patient(queueRepository not empty)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     queueService.get.mockResolvedValue('Andrei');
     await queueController.getNext(req, res, next);
@@ -63,15 +68,14 @@ describe('queue controller unit tests', () => {
   });
 
   test('first in queueRepository patient(queueRepository is empty)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
-    queueService.get.mockResolvedValue(myError);
+    queueService.get = jest.fn(() => { throw myError; });
     await queueController.getNext(req, res, next);
+    expect(queueService.get).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('first in queueRepository patient(server error)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     queueService.get = jest.fn(() => { throw serverErr; });
     await queueController.getNext(req, res, next);
@@ -80,24 +84,25 @@ describe('queue controller unit tests', () => {
   });
 
   test('add in queueRepository', async () => {
-    req.headers.cookie = 'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     userService.getByUserId.mockResolvedValue(docData);
-    queueService.add.mockResolvedValue('111', '222');
+    queueService.add.mockResolvedValue('111');
     await queueController.addToQueue(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.Created);
     expect(res._getJSONData()).toEqual('111');
   });
 
-  test('add in queueRepository (token undefind)', async () => {
+  test('add in queueRepository (payload undefind)', async () => {
     req.body = { docID: '111' };
-    queueService.add.mockResolvedValue(myError);
+    userService.getByUserId.mockResolvedValue(docData);
+    queueService.add = jest.fn(() => { throw myError; });
     await queueController.addToQueue(req, res, next);
+    expect(queueService.add).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 
   test('add in queueRepository (server error)', async () => {
     req.body = { docID: '111' };
+    userService.getByUserId.mockResolvedValue(docData);
     queueService.add = jest.fn(() => { throw serverErr; });
     await queueController.addToQueue(req, res, next);
     expect(queueService.add).toThrow(serverErr);
@@ -112,8 +117,9 @@ describe('queue controller unit tests', () => {
   });
 
   test('get all queues(all queues empty) ', async () => {
-    queueService.getAll.mockResolvedValue(myError);
+    queueService.getAll = jest.fn(() => { throw myError; });
     await queueController.getAllQueues(req, res, next);
+    expect(queueService.getAll).toThrow(myError);
     expect(next).toHaveBeenCalledWith(myError);
   });
 

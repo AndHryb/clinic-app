@@ -22,7 +22,7 @@ class AuthApi {
       const { data } = await this.client.post('/auth/login', formData);
       if (data.token) {
         this.token = `${(data.token).toString()}`;
-        return data.message;
+        return data;
       }
       return false;
     } catch (err) {
@@ -45,11 +45,20 @@ class AuthApi {
     }
   }
 
-  getCookieToken() {
-    const matches = document.cookie.match(new RegExp(
-      `(?:^|; )${'token'.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1')}=([^;]*)`,
-    ));
-    this.token = matches ? decodeURIComponent(matches[1]) : undefined;
+  getCookieToken(tokenName) {
+    //console.log(document.cookie);
+    try{
+      const allCookies = document.cookie.split(';');
+    let cookiesObj = {};
+    allCookies.forEach((elem,i) => {
+      const curr = elem.split('=');
+      cookiesObj[curr[0].trim()] = curr[1].trim();
+    })
+    this.token = cookiesObj[tokenName];
+    }catch(err){
+      console.log(err);
+    }
+    
   }
 }
 

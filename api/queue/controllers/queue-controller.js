@@ -1,7 +1,8 @@
 import * as cookie from 'cookie';
-import { STATUSES, NO_PATIENT_MSG, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
+import { STATUSES} from '../../../constants.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
+import decodeJWT from '../../../helpers/decode-token.js';
+import extractJWT from '../../../helpers/extract-jwt.js';
 
 export default class QueueController {
   constructor(queueService, userService, doctorService) {
@@ -12,17 +13,10 @@ export default class QueueController {
 
   async addToQueue(req, res, next) {
     try {
-      const cookies = cookie.parse(req.headers.cookie);
-      const { token } = cookies;
       const { docID } = req.body;
-      const payload = checkJwtToken(token);
-      const patient = await this.userService.getByUserId(payload);
+      const patient = await this.userService.getByUserId(req.payload);
       const result = await this.queueService.add(patient.id, docID);
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
-        res.status(STATUSES.Created).json(result);
-      }
+      res.status(STATUSES.Created).json(result);
     } catch (err) {
       next(err);
     }
@@ -30,17 +24,11 @@ export default class QueueController {
 
   async getNext(req, res, next) {
     try {
-      const cookies = cookie.parse(req.headers.cookie);
-      const { doctorToken } = cookies;
-      const { userId } = checkJwtToken(doctorToken);
+      const { userId } = req.payload;
       const { id } = await this.doctorService.getByUserId(userId);
       const result = await this.queueService.get(id);
       res.set('Content-Type', 'application/json;charset=utf-8');
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
-        res.status(STATUSES.OK).json(result);
-      }
+      res.status(STATUSES.OK).json(result);
     } catch (err) {
       next(err);
     }
@@ -49,11 +37,7 @@ export default class QueueController {
   async getAllQueues(req, res, next) {
     try {
       const result = await this.queueService.getAll();
-      if (result instanceof ApiError) {
-        next(result);
-      } else {
-        res.status(STATUSES.OK).json(result);
-      }
+      res.status(STATUSES.OK).json(result);
     } catch (err) {
       next(err);
     }

@@ -1,8 +1,8 @@
 import { authClient } from './auth-api.js';
-authClient.getCookieToken();
-if(!authClient.token){
-  window.location = './doctor-login.html'
-}
+authClient.getCookieToken('doctor-token');
+// if(!authClient.token){
+//   window.location = './doctor-login.html'
+// }
 
 const displayPatientNameForDoctor = document.getElementById('display_patient_name_for_doctor');
 const nextBtnForDoctor = document.getElementById('next_btn');
