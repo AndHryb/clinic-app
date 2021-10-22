@@ -5,9 +5,8 @@ import UserService from '../service/user-service.js';
 import UserSqlRepository from '../repository/user-sql-repository.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
-import ApiError from '../../../error_handling/ApiError.js';
-import { MESSAGES, STATUSES } from '../../../constants.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
+import { STATUSES } from '../../../constants.js';
 
 const patientsSQLDBMock = new SequelizeMock();
 const usersSQLDBMock = new SequelizeMock();
@@ -21,7 +20,6 @@ const userService = new UserService(userSqlRepository, patientSqlRepository, doc
 jest.mock('../repository/user-sql-repository.js');
 jest.mock('../../patient/repository/patient-sql-repository.js');
 jest.mock('../../doctor/repository/doctor.repository.js');
-jest.mock('../../../helpers/decode-token.js');
 jest.mock('jsonwebtoken');
 
 describe('user service unit test', () => {

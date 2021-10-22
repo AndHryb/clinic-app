@@ -3,7 +3,7 @@ import redis from 'redis-mock';
 import QueueService from '../service/queue-service.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import QueueRedisRepository from '../repository/queue-redis-repository.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 import { STATUSES } from '../../../constants.js';
 
 const client = redis.createClient();

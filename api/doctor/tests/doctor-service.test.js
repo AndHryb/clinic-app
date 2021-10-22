@@ -1,7 +1,7 @@
 import DoctorService from '../service/doctor.service.js';
 import DoctorRepository from '../repository/doctor.repository.js';
-import { STATUSES, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import { STATUSES } from '../../../constants.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 const doctorService = new DoctorService(new DoctorRepository());
 const doctorRepository = doctorService.repository;

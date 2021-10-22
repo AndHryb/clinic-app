@@ -1,7 +1,5 @@
-import * as cookie from 'cookie';
 import { STATUSES, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
-import extractJWT from '../../../helpers/extract-jwt.js';
+
 
 export default class UserController {
   constructor(userService) {

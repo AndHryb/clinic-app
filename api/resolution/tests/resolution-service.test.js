@@ -4,9 +4,8 @@ import ResolutionService from '../service/resolution-service.js';
 import ResolutionSqlRepository from '../repository/resolution-sql-repository.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import QueueRedisRepository from '../../queue/repository/queue-redis-repository.js';
-import { MESSAGES, STATUSES, TTL } from '../../../constants.js';
-import decodeToken from '../../../helpers/decode-token.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import { STATUSES, TTL } from '../../../constants.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 const client = redis.createClient();
 const patientsSQLDBMock = new SequelizeMock();
@@ -20,7 +19,6 @@ const resolutionService = new ResolutionService(queueRedisRepository, resolution
 jest.mock('../repository/resolution-sql-repository.js');
 jest.mock('../../patient/repository/patient-sql-repository.js');
 jest.mock('../../queue/repository/queue-redis-repository.js');
-jest.mock('../../../helpers/decode-token.js');
 
 describe('resolution service unit test', () => {
   let dataValues;

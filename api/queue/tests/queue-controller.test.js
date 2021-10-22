@@ -10,8 +10,7 @@ import QueueRedisRepository from '../repository/queue-redis-repository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
 
-import checkJwtToken from '../../../helpers/decode-token.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 const usersSQLDB = new SequelizeMock();
 const doctorSQLDB = new SequelizeMock();
@@ -30,7 +29,6 @@ const queueController = new QueueController(queueService, userService, doctorSer
 jest.mock('../../auth/service/user-service.js');// UserService
 jest.mock('../service/queue-service.js');// QueueService
 jest.mock('../../doctor/service/doctor.service.js');// DoctorService
-jest.mock('../../../helpers/decode-token.js');// checkJwtToken
 
 const docData = { id: '444', name: 'Sergei' };
 

@@ -1,8 +1,4 @@
-import * as cookie from 'cookie';
 import { STATUSES} from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
-import decodeJWT from '../../../helpers/decode-token.js';
-import extractJWT from '../../../helpers/extract-jwt.js';
 
 export default class QueueController {
   constructor(queueService, userService, doctorService) {

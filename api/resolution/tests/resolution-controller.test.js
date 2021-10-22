@@ -6,8 +6,7 @@ import ResolutionService from '../service/resolution-service.js';
 import DoctorService from '../../doctor/service/doctor.service.js';
 import ResolutionSqlRepository from '../repository/resolution-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 const resolutionsSQLDB = new SequelizeMock();
 const doctorSQLDB = new SequelizeMock();
@@ -21,7 +20,6 @@ const resolutionController = new ResolutionController(resolutionService, doctorS
 
 jest.mock('../service/resolution-service.js');
 jest.mock('../../doctor/service/doctor.service.js');
-jest.mock('../../../helpers/decode-token.js');
 
 describe('resolution controller unit test', () => {
   let resolutionData1;

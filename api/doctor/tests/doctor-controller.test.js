@@ -2,12 +2,11 @@ import * as httpMocks from 'node-mocks-http';
 import DoctorController from '../controller/doctor.controller.js';
 import DoctorService from '../service/doctor.service.js';
 import { STATUSES } from '../../../constants.js';
-import ApiError from '../../../error_handling/ApiError.js';
+import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 const doctorController = new DoctorController(new DoctorService());
 const doctorService = doctorController.service;
 
-jest.mock('../../../helpers/decode-token.js');
 
 describe('doctor controller have to', () => {
   let req;
