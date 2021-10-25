@@ -52,6 +52,7 @@ export async function creator(docModel, userModel, specModel) {
         name: docName,
       },
     });
+    console.log(spec);
     await spec.addDoctor(doc);
   }
 

@@ -33,13 +33,13 @@ class Injector {
       );
       this.patientRepository = new PatientSqlRepository(patientsSQLDB, resolutionsSQLDB);
       this.userRepository = new UserSqlRepository(usersSQLDB);
-      this.doctorRepository = new DoctorRepository(doctorsSQLDB, specialtiesSQLDB);
+      this.doctorRepository = new DoctorRepository(sequelize, doctorsSQLDB, specialtiesSQLDB);
       const client = redisInit();
       this.queueRepository = new QueueRedisRepository(client);
     }
 
     this.queueService = new QueueService(
-      this.patientRepository, this.queueRepository, this.doctorRepository
+      this.patientRepository, this.queueRepository, this.doctorRepository,
     );
     this.resolutionServise = new ResolutionService(
       this.queueRepository, this.resolutionRepository, this.patientRepository, TTL,

@@ -1,11 +1,15 @@
-import {MAX_LENGTH, MIN_LENGTH, MIN_PASSWORD_LENGTH } from '../../constants.js';
+import { MAX_LENGTH, MIN_LENGTH, MIN_PASSWORD_LENGTH } from '../../constants.js';
 
-export const checkRegistrationFormShema = {
+export default {
   type: 'object',
   properties: {
-    email: { type: 'string', minLength:MIN_LENGTH, maxLength:MAX_LENGTH, pattern: '[@]'},
-    password: { type: 'string', minLength:MIN_PASSWORD_LENGTH },
-    name: { type: 'string', minLength:MIN_LENGTH, maxLength:MAX_LENGTH, pattern: '[a-zA-Z]+' },
+    email: {
+      type: 'string', minLength: MIN_LENGTH, maxLength: MAX_LENGTH, pattern: '[@]',
+    },
+    password: { type: 'string', minLength: MIN_PASSWORD_LENGTH },
+    name: {
+      type: 'string', minLength: MIN_LENGTH, maxLength: MAX_LENGTH, pattern: '[a-zA-Z]+',
+    },
     birthday: { type: 'integer' },
     gender: { type: 'string' },
   },

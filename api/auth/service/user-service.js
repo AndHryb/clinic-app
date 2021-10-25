@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { USER_TYPE, MESSAGES} from '../../../constants.js';
+import { USER_TYPE, MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 export default class UserService {
@@ -20,7 +20,6 @@ export default class UserService {
       const { password } = data;
       const role = USER_TYPE.PATIENT;
       const user = await this.userRepository.add(data.email, bcrypt.hashSync(password, salt), role);
-      console.log(user);
       const options = {
         name: data.name,
         gender: data.gender,
@@ -28,10 +27,35 @@ export default class UserService {
         userId: user.id,
       };
       await this.patientRepository.add(options);
-      const token = this.createToken(user);
+      const token = this.constructor.createToken(user);
       return token;
     } catch (err) {
       console.log(`User service registration error :${err.name} : ${err.message}`);
+      throw err;
+    }
+  }
+
+  async registrationDoctor(data) {
+    try {
+      const candidate = await this.userRepository.getByEmail(data.email);
+      if (candidate) {
+        throw ApiError.conflict(MESSAGES.EMAIL_EXIST);
+      }
+      const salt = bcrypt.genSaltSync(10);
+      const { password } = data;
+      const role = USER_TYPE.DOCTOR;
+      const user = await this.userRepository.add(data.email, bcrypt.hashSync(password, salt), role);
+      const options = {
+        name: data.name,
+        email: data.email,
+        userId: user.id,
+        specNames: data.specNames,
+      };
+      await this.doctorRepository.create(options);
+      const token = this.constructor.createToken(user);
+      return token;
+    } catch (err) {
+      console.log(`User service registrationDoctor error :${err.name} : ${err.message}`);
       throw err;
     }
   }
@@ -47,9 +71,9 @@ export default class UserService {
       if (!resultPassword) {
         throw ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
       }
-      const token = this.createToken(candidate);
+      const token = this.constructor.createToken(candidate);
 
-      return {token, role: candidate.role}
+      return { token, role: candidate.role };
     } catch (err) {
       console.log(`User service login error :${err.name} : ${err.message}`);
       throw err;
@@ -58,7 +82,7 @@ export default class UserService {
 
   async getByUserId(payload) {
     try {
-      if(!payload){
+      if (!payload) {
         throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);
       }
       const { userId, role } = payload;
@@ -76,21 +100,21 @@ export default class UserService {
     }
   }
 
-  createToken(data) {
-    try{
+  static createToken(data) {
+    try {
       const token = jwt.sign({
         email: data.email,
         userId: data.id,
         role: data.role,
       }, process.env.JWT_KEY,
       {
-        expiresIn : Number(process.env.JWT_TTL),
+        expiresIn: Number(process.env.JWT_TTL),
       });
-  
+
       return token;
-    }catch(err){
+    } catch (err) {
+      console.log(`User service createToken error :${err.name} : ${err.message}`);
       throw err;
     }
   }
-
 }

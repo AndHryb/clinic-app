@@ -88,7 +88,7 @@ describe('user service unit test', () => {
     userSqlRepository.getByEmail.mockResolvedValue(false);
     userSqlRepository.add.mockResolvedValue(userData);
     patientSqlRepository.add.mockResolvedValue(patientData);
-    userService.createToken = jest.fn(() => 'valid_token_111');
+    userService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
     const res = await userService.registration(regData);
     expect(res).toEqual('valid_token_111');
   });
@@ -112,7 +112,6 @@ describe('user service unit test', () => {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
     }
-    
   });
 
   test('login', async () => {

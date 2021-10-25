@@ -14,6 +14,7 @@ export default function specialityModel(sequelize) {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
   });
 

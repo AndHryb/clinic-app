@@ -1,7 +1,7 @@
 import express from 'express';
 import Ajv from 'ajv';
 
-import { checkResolutionSchema } from '../helpers/validation-schems-ajv/checkResolution.js';
+import checkResolutionSchema from '../helpers/validation-schems-ajv/checkResolution.js';
 import { checkNameSchema } from '../helpers/validation-schems-ajv/checkName.js';
 import { injector } from '../injector.js';
 import { STATUSES } from '../constants.js';
@@ -19,10 +19,10 @@ resolutionRouter.post('/',
     }
   }, resolutionController.addResolution.bind(resolutionController));
 
-  resolutionRouter.get('/me',
+resolutionRouter.get('/me',
   resolutionController.getResolutionByToken.bind(resolutionController));
 
-  resolutionRouter.delete('/',
+resolutionRouter.delete('/',
   async (req, res, next) => {
     if (req.body.value) {
       next();
@@ -32,7 +32,7 @@ resolutionRouter.post('/',
   },
   resolutionController.deleteResolution.bind(resolutionController));
 
-  resolutionRouter.get('/',
+resolutionRouter.get('/',
   async (req, res, next) => {
     if (ajv.validate(checkNameSchema, req.query.name)) {
       next();
@@ -42,4 +42,4 @@ resolutionRouter.post('/',
   },
   resolutionController.getResolutionsByName.bind(resolutionController));
 
-  export default resolutionRouter;
+export default resolutionRouter;

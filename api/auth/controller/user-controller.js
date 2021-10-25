@@ -1,6 +1,5 @@
 import { STATUSES, MESSAGES } from '../../../constants.js';
 
-
 export default class UserController {
   constructor(userService) {
     this.userService = userService;
@@ -9,10 +8,22 @@ export default class UserController {
   async registration(req, res, next) {
     try {
       const result = await this.userService.registration(req.body);
-        res.status(STATUSES.Created).json({
-          message: MESSAGES.REGISTRATION_OK,
-          token: result,
-        });
+      res.status(STATUSES.Created).json({
+        message: MESSAGES.REGISTRATION_OK,
+        token: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async registrationDoctor(req, res, next) {
+    try {
+      const result = await this.userService.registrationDoctor(req.body);
+      res.status(STATUSES.Created).json({
+        message: MESSAGES.REGISTRATION_OK,
+        token: result,
+      });
     } catch (err) {
       next(err);
     }
@@ -21,11 +32,11 @@ export default class UserController {
   async login(req, res, next) {
     try {
       const result = await this.userService.login(req.body);
-        res.status(STATUSES.OK).json({
-          message: MESSAGES.LOGIN_OK,
-          token: result.token,
-          role: result.role,
-        });
+      res.status(STATUSES.OK).json({
+        message: MESSAGES.LOGIN_OK,
+        token: result.token,
+        role: result.role,
+      });
     } catch (err) {
       next(err);
     }
@@ -39,5 +50,4 @@ export default class UserController {
       next(err);
     }
   }
-  
 }

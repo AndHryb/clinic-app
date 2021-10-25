@@ -10,4 +10,7 @@ doctorRouter.get('/all',
 doctorRouter.get('/specialities',
   doctorController.getSpecByUserId.bind(doctorController));
 
+doctorRouter.patch('/',
+  doctorController.updateById.bind(doctorController));
+
 export default doctorRouter;

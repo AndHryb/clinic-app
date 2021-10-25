@@ -15,23 +15,19 @@ import checkJWT from './middleware/checkJwt.js';
 const app = express();
 const __dirname = path.resolve();
 
-//app.use(checkJWT);
+
 
 app.use(express.static(path.resolve(__dirname, 'client')));
 app.use(bodyParser.json({ strict: false }));
 
-// app.use(passport.initialize());
-// checkToken(passport);
-//passport.authenticate('jwt', { session: false})
 
 
 app.use('/auth', userRouter);
 
-app.use(checkJWT);
 
-app.use('/doctor', doctorRouter);
-app.use('/queue', queueRouter);
-app.use('/resolution', resolutionRouter);
+app.use('/doctor', checkJWT, doctorRouter);
+app.use('/queue', checkJWT, queueRouter);
+app.use('/resolution', checkJWT, resolutionRouter);
 
 
 app.use(apiErrorHandler);

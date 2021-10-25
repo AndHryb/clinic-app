@@ -1,5 +1,6 @@
 {
-  "jest.jestCommandLine": "test",
-  "editor.formatOnSave": true,
-  "[javascript]":{"editor.formatOnSave": false},
+  "eslint.format.enable": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
 }
