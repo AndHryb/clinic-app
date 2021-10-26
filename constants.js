@@ -23,8 +23,8 @@ export const MESSAGES = {
   TOKEN_NOT_FOUND: 'log in again and reload the page',
   TOKEN_EXPIRED: 'JWT expired, log in again',
   NO_USER: 'User not found in Database',
+  UNCORECT_DATA: 'Fill out the form with the correct data',
 };
-
 
 export const STATUSES = {
   OK: 200,

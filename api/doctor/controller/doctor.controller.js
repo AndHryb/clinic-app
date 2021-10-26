@@ -17,7 +17,7 @@ export default class DoctorController {
 
   async deleteById(req, res, next) {
     try {
-      const id = req.body;
+      const { id } = req.body;
       const result = await this.doctorService.deleteById(id);
       res.status(STATUSES.OK).json(result);
     } catch (err) {

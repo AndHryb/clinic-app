@@ -84,6 +84,32 @@ describe('user controller unit test', () => {
     expect(next).toHaveBeenCalledWith(serverErr);
   });
 
+  test('registration doctor(all ok)', async () => {
+    userService.registrationDoctor.mockResolvedValue('--token--');
+    await userController.registrationDoctor(req, res, next);
+    expect(res.statusCode)
+      .toEqual(STATUSES.Created);
+    expect(res._getJSONData())
+      .toEqual({
+        token: '--token--',
+        message: MESSAGES.REGISTRATION_OK,
+      });
+  });
+
+  test('registration doctor (email is already busy)', async () => {
+    userService.registrationDoctor = jest.fn(() => { throw myError; });
+    await userController.registrationDoctor(req, res, next);
+    expect(userService.registrationDoctor).toThrow(myError);
+    expect(next).toHaveBeenCalledWith(myError);
+  });
+
+  test('registration doctor(some server error)', async () => {
+    userService.registrationDoctor = jest.fn(() => { throw serverErr; });
+    await userController.registrationDoctor(req, res, next);
+    expect(userService.registrationDoctor).toThrow(serverErr);
+    expect(next).toHaveBeenCalledWith(serverErr);
+  });
+
   test('login(all ok)', async () => {
     resData.token = {token:'111', role: 'patient',};
     userService.login.mockResolvedValue(resData.token);

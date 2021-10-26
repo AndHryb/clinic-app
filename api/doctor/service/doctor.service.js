@@ -7,16 +7,6 @@ export default class DoctorService {
     this.userRepository = userRepository;
   }
 
-  // async createDoctor(options) {
-  //   try {
-  //     const res = await this.doctorRepository.create(options);
-  //     return res;
-  //   } catch (err) {
-  //     console.log(`Doctor service createDoctor error :${err.name} : ${err.message}`);
-  //     throw err;
-  //   }
-  // }
-
   async updateById(options) {
     try {
       const res = await this.doctorRepository.updateById(options);

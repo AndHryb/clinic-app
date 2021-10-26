@@ -65,39 +65,37 @@ describe('user service unit test', () => {
     myError = ApiError.forbidden('foo');
   });
 
-  
   test('create token ', async () => {
     jwt.sign = jest.fn(() => '111');
-    const res = userService.createToken(userData)
+    const res = UserService.createToken(userData);
     expect(res).toEqual('111');
   });
 
   test('create token(some error) ', async () => {
-    try{
-      jwt.sign = jest.fn(() => {throw serverErr});
-      const res = userService.createToken(userData)
+    try {
+      jwt.sign = jest.fn(() => { throw serverErr; });
+      const res = UserService.createToken(userData);
       expect(res).toEqual('111');
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
     }
   });
 
-
   test('registration test', async () => {
     userSqlRepository.getByEmail.mockResolvedValue(false);
     userSqlRepository.add.mockResolvedValue(userData);
     patientSqlRepository.add.mockResolvedValue(patientData);
-    userService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
+    UserService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
     const res = await userService.registration(regData);
     expect(res).toEqual('valid_token_111');
   });
 
   test('registration test(email in base)', async () => {
-    try{
+    try {
       userSqlRepository.getByEmail = jest.fn(() => { throw myError; });
       await userService.registration(regData);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.message).toBe('foo');
       expect(err.statusCode).toBe(STATUSES.Forbidden);
@@ -105,29 +103,60 @@ describe('user service unit test', () => {
   });
 
   test('registration test(some error)', async () => {
-    try{
+    try {
       userSqlRepository.getByEmail = jest.fn(() => { throw serverErr; });
       await userService.registration(regData);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
     }
   });
 
+  test('registration doctor test', async () => {
+    userSqlRepository.getByEmail.mockResolvedValue(false);
+    userSqlRepository.add.mockResolvedValue(userData);
+    doctorSqlRepository.create.mockResolvedValue(patientData);
+    UserService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
+    const res = await userService.registration(regData);
+    expect(res).toEqual('valid_token_111');
+
+  }); test('registration doctor test(email in base)', async () => {
+    try {
+      userSqlRepository.getByEmail = jest.fn(() => { throw myError; });
+      await userService.registrationDoctor(regData);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+      expect(err.statusCode).toBe(STATUSES.Forbidden);
+    }
+  });
+
+  test('registration doctor test(some error)', async () => {
+    try {
+      userSqlRepository.getByEmail = jest.fn(() => { throw serverErr; });
+      await userService.registrationDoctor(regData);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
+
+
   test('login', async () => {
     const salt = bcrypt.genSaltSync(10);
     userData.password = bcrypt.hashSync(userData.password, salt);
     userSqlRepository.getByEmail.mockResolvedValue(userData);
-    userService.createToken = jest.fn(() => 'valid_token_111');
+    UserService.createToken = jest.fn(() => 'valid_token_111');
     const res = await userService.login(regData);
-    expect(res).toEqual({"role": "patient", "token": "valid_token_111"});
+    expect(res).toEqual({ role: 'patient', token: 'valid_token_111' });
   });
 
   test('login, email doesn\'t match', async () => {
-    try{
+    try {
       userSqlRepository.getByEmail = jest.fn(() => { throw myError; });
       await userService.login(regData);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.message).toBe('foo');
       expect(err.statusCode).toBe(STATUSES.Forbidden);
@@ -135,11 +164,11 @@ describe('user service unit test', () => {
   });
 
   test('login, password doesn\'t match', async () => {
-    try{
+    try {
       userSqlRepository.getByEmail = jest.fn(() => { throw myError; });
       bcrypt.compareSync = jest.fn(() => false);
       await userService.login(regData);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.message).toBe('foo');
       expect(err.statusCode).toBe(STATUSES.Forbidden);
@@ -147,14 +176,14 @@ describe('user service unit test', () => {
   });
 
   test('login,(some error)', async () => {
-    try{
+    try {
       userSqlRepository.getByEmail.mockResolvedValue(userData);
-      bcrypt.compareSync = jest.fn(() => {throw serverErr;});
+      bcrypt.compareSync = jest.fn(() => { throw serverErr; });
       const res = await userService.login(regData);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
-    }  
+    }
   });
 
   // test('get by token (patient)', async () => {
@@ -214,23 +243,22 @@ describe('user service unit test', () => {
   });
 
   test('get by userId, some error ', async () => {
-    try{
+    try {
       patientSqlRepository.getByUserId = jest.fn(() => { throw serverErr; });
       await userService.getByUserId(payload);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
     }
   });
 
   test('get by userId, handled error ', async () => {
-    try{
+    try {
       patientSqlRepository.getByUserId = jest.fn(() => { throw myError; });
       await userService.getByUserId(payload);
-    }catch(err){
+    } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.message).toBe('foo');
     }
   });
-
 });

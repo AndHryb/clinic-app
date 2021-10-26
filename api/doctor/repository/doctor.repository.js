@@ -1,8 +1,11 @@
+import bcrypt from 'bcryptjs';
+
 export default class DoctorRepository {
-  constructor(sequelize, docModel, specModel) {
+  constructor(sequelize, docModel, specModel, userModel) {
     this.sequelize = sequelize;
     this.docModel = docModel;
     this.specModel = specModel;
+    this.userModel = userModel;
   }
 
   async create(options) {
@@ -20,7 +23,7 @@ export default class DoctorRepository {
               name: elem,
             },
             defaults: {
-              name: options.elem,
+              name: elem,
             },
             transaction: t,
           });
@@ -49,32 +52,89 @@ export default class DoctorRepository {
   }
 
   async updateById(options) {
-    const { id, name, email } = options;
-    const doctor = await this.docModel.findOne({
-      where: {
-        id,
-      },
-    });
-    if (doctor.name !== name && name) {
-      doctor.name = name;
-    }
-    if (doctor.email !== email && email) {
-      doctor.email = email;
-    }
-    await doctor.save();
+    const result = await this.sequelize.transaction(async (t) => {
+      const doctor = await this.docModel.findOne({
+        where: {
+          id: options.id,
+        },
+        transaction: t,
+      });
 
-    return doctor;
+      const user = await this.userModel.findByPk(doctor.userId);
+
+      if (doctor.name !== options.name && options.name) {
+        doctor.name = options.name;
+      }
+      if (doctor.email !== options.email && options.email) {
+        doctor.email = options.email;
+        user.email = options.email;
+      }
+      if (options.oldPassword && options.newPassword) {
+        const resultPassword = bcrypt.compareSync(options.oldPassword, user.password);
+        console.log(resultPassword);
+        if (resultPassword) {
+          const salt = bcrypt.genSaltSync(10);
+          user.password = bcrypt.hashSync(options.newPassword, salt);
+        }
+      }
+      if (options.specNames) {
+        for (const elem of options.specNames) {
+          await this.specModel.findOrCreate({
+            where: {
+              name: elem,
+            },
+            defaults: {
+              name: elem,
+            },
+            transaction: t,
+          });
+        }
+      }
+      await doctor.save();
+      await user.save();
+      return doctor;
+    });
+
+    if (options.specNames) {
+      for (const elem of options.specNames) {
+        const spec = await this.specModel.findOne({
+          where: {
+            name: elem,
+          },
+        });
+        const doc = await this.docModel.findOne({
+          where: {
+            id: options.id,
+          },
+        });
+        await spec.addDoctor(doc);
+      }
+    }
+    return result;
   }
 
   async deleteById(id) {
-    const doctor = await this.docModel.findOne({
-      where: {
-        id,
-      },
-    });
-    await doctor.destroy();
+    const result = await this.sequelize.transaction(async (t) => {
+      const doctor = await this.docModel.findOne({
+        where: {
+          id,
+        },
+        transaction: t,
+      });
 
-    return doctor;
+      const user = await this.userModel.findOne({
+        where: {
+          id: doctor.userId,
+        },
+        transaction: t,
+      });
+      await doctor.destroy();
+      await user.destroy();
+
+      return doctor;
+    });
+
+    return result;
   }
 
   async getDoctors() {

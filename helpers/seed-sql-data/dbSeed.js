@@ -3,11 +3,21 @@ import bcrypt from 'bcryptjs';
 
 export async function creator(docModel, userModel, specModel) {
   const users = [
-    { id: uuidv4(), email: 'asd@asd', name: 'Dima', role: 'doctor' },
-    { id: uuidv4(), email: 'kek@kek', name: 'Kat', role: 'doctor' },
-    { id: uuidv4(), email: 'kat@kat', name: 'Oleg', role: 'doctor' },
-    { id: uuidv4(), email: 'sas@sas', name: 'Joe', role: 'doctor' },
-    { id: uuidv4(), email: 'joe@joe', name: 'Clarc', role: 'doctor' },
+    {
+      id: uuidv4(), email: 'asd@asd', name: 'Dima', role: 'doctor',
+    },
+    {
+      id: uuidv4(), email: 'kek@kek', name: 'Kat', role: 'doctor',
+    },
+    {
+      id: uuidv4(), email: 'kat@kat', name: 'Oleg', role: 'doctor',
+    },
+    {
+      id: uuidv4(), email: 'sas@sas', name: 'Joe', role: 'doctor',
+    },
+    {
+      id: uuidv4(), email: 'joe@joe', name: 'Clarc', role: 'doctor',
+    },
   ];
 
   const specialities = [
@@ -26,9 +36,10 @@ export async function creator(docModel, userModel, specModel) {
   ];
 
   async function createPair(name, email, userId, role) {
+    const salt = bcrypt.genSaltSync(10);
     await userModel.create({
       id: userId,
-      password: bcrypt.hashSync('9876', 10),
+      password: bcrypt.hashSync('9876', salt),
       email,
       role,
     });

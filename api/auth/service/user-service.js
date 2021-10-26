@@ -67,7 +67,6 @@ export default class UserService {
         throw ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
       }
       const resultPassword = bcrypt.compareSync(data.password, candidate.password);
-      console.log(resultPassword);
       if (!resultPassword) {
         throw ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
       }
