@@ -17,18 +17,7 @@ const userController = new UserController(userService);
 jest.mock('../service/user-service.js');
 
 describe('user controller unit test', () => {
-  const registrationData = {
-    email: 'andryigr@gmail.com',
-    password: '1111',
-    name: 'Andrei Hrybouski',
-    birthday: 635385600000,
-    gender: 'male',
-  };
-  const loginData = {
-    email: 'andryigr@gmail.com',
-    password: '1111',
-  };
-
+  let regResData;
   let resData;
   let req;
   let res;
@@ -37,6 +26,12 @@ describe('user controller unit test', () => {
   let serverErr;
 
   beforeEach(() => {
+    regResData = {
+      patient:'aaa',
+      doctor: 'bbb',
+      token: '--token--',
+    };
+
     resData = {
       email: true,
       password: true,
@@ -59,13 +54,14 @@ describe('user controller unit test', () => {
   });
 
   test('registration(all ok)', async () => {
-    userService.registration.mockResolvedValue('--token--');
+    userService.registration.mockResolvedValue(regResData);
     await userController.registration(req, res, next);
     expect(res.statusCode)
       .toEqual(STATUSES.Created);
     expect(res._getJSONData())
       .toEqual({
-        token: '--token--',
+        patient: regResData.patient,
+        token: regResData.token,
         message: MESSAGES.REGISTRATION_OK,
       });
   });
@@ -85,13 +81,14 @@ describe('user controller unit test', () => {
   });
 
   test('registration doctor(all ok)', async () => {
-    userService.registrationDoctor.mockResolvedValue('--token--');
+    userService.registrationDoctor.mockResolvedValue(regResData);
     await userController.registrationDoctor(req, res, next);
     expect(res.statusCode)
       .toEqual(STATUSES.Created);
     expect(res._getJSONData())
       .toEqual({
-        token: '--token--',
+        doctor: regResData.doctor,
+        token: regResData.token,
         message: MESSAGES.REGISTRATION_OK,
       });
   });
