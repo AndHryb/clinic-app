@@ -1,116 +1,92 @@
-import bcrypt from 'bcryptjs';
+import pkg from 'sequelize';
+
+const { Op } = pkg;
 
 export default class DoctorRepository {
-  constructor(sequelize, docModel, specModel, userModel) {
+  constructor(sequelize, docModel, specModel, userModel, docSpecModel) {
     this.sequelize = sequelize;
     this.docModel = docModel;
     this.specModel = specModel;
     this.userModel = userModel;
+    this.docSpecModel = docSpecModel;
   }
 
   async create(options) {
     try {
       const result = await this.sequelize.transaction(async (t) => {
+        const user = await this.userModel.create({
+          email: options.email,
+          password: options.password,
+          role: options.role,
+        }, { transaction: t });
+
         const doctor = await this.docModel.create({
           name: options.name,
           email: options.email,
-          userId: options.userId,
+          userId: user.id,
         }, { transaction: t });
 
-        for (const elem of options.specNames) {
-          await this.specModel.findOrCreate({
-            where: {
-              name: elem,
+        const specs = await this.specModel.findAll({
+          where: {
+            name: {
+              [Op.or]: options.specNames,
             },
-            defaults: {
-              name: elem,
-            },
-            transaction: t,
-          });
-        }
-        return doctor;
-      });
+          },
+          transaction: t,
+        });
 
-      for (const elem of options.specNames) {
-        const spec = await this.specModel.findOne({
-          where: {
-            name: elem,
-          },
-        });
-        const doc = await this.docModel.findOne({
-          where: {
-            name: options.name,
-          },
-        });
-        await spec.addDoctor(doc);
-      }
+        for (const spec of specs) {
+          spec.addDoctor(doctor);
+        }
+        return { doctor, user };
+      });
       return result;
     } catch (err) {
-      console.log(`Doctor repository create tranzaction ${err.message}`);
+      console.log(`Doctor repository create error ${err.message}`);
       throw err;
     }
   }
 
   async updateById(options) {
-    const result = await this.sequelize.transaction(async (t) => {
-      const doctor = await this.docModel.findOne({
-        where: {
-          id: options.id,
-        },
-        transaction: t,
-      });
-
-      const user = await this.userModel.findByPk(doctor.userId);
-
-      if (doctor.name !== options.name && options.name) {
-        doctor.name = options.name;
-      }
-      if (doctor.email !== options.email && options.email) {
-        doctor.email = options.email;
-        user.email = options.email;
-      }
-      if (options.oldPassword && options.newPassword) {
-        const resultPassword = bcrypt.compareSync(options.oldPassword, user.password);
-        console.log(resultPassword);
-        if (resultPassword) {
-          const salt = bcrypt.genSaltSync(10);
-          user.password = bcrypt.hashSync(options.newPassword, salt);
-        }
-      }
-      if (options.specNames) {
-        for (const elem of options.specNames) {
-          await this.specModel.findOrCreate({
+    try {
+      const result = await this.sequelize.transaction(async (t) => {
+        await options.doctor.save({ transaction: t });
+        if (options.user) await options.user.save({ transaction: t });
+        if (options.newSpecs) {
+          const specs = await this.specModel.findAll({
             where: {
-              name: elem,
-            },
-            defaults: {
-              name: elem,
+              name: {
+                [Op.or]: options.newSpecs,
+              },
             },
             transaction: t,
           });
-        }
-      }
-      await doctor.save();
-      await user.save();
-      return doctor;
-    });
 
-    if (options.specNames) {
-      for (const elem of options.specNames) {
-        const spec = await this.specModel.findOne({
-          where: {
-            name: elem,
-          },
-        });
-        const doc = await this.docModel.findOne({
-          where: {
-            id: options.id,
-          },
-        });
-        await spec.addDoctor(doc);
-      }
+          for (const spec of specs) {
+            spec.addDoctor(options.doctor);
+          }
+
+          const brokenBindings = await this.specModel.findAll({
+            where: {
+              name: {
+                [Op.or]: options.oldSpecs,
+              },
+            },
+            transaction: t,
+          });
+
+          for (const spec of brokenBindings) {
+            spec.removeDoctor(options.doctor);
+          }
+        }
+
+        return options;
+      });
+      return result;
+    } catch (err) {
+      console.log(`Doctor repository updateById error ${err.message}`);
+      throw err;
     }
-    return result;
   }
 
   async deleteById(id) {
@@ -122,14 +98,16 @@ export default class DoctorRepository {
         transaction: t,
       });
 
-      const user = await this.userModel.findOne({
+      if (!doctor) return false;
+
+      await doctor.destroy();
+
+      await this.userModel.destroy({
         where: {
           id: doctor.userId,
         },
         transaction: t,
       });
-      await doctor.destroy();
-      await user.destroy();
 
       return doctor;
     });

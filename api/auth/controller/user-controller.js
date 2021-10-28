@@ -10,7 +10,8 @@ export default class UserController {
       const result = await this.userService.registration(req.body);
       res.status(STATUSES.Created).json({
         message: MESSAGES.REGISTRATION_OK,
-        token: result,
+        patient: result.patient,
+        token: result.token,
       });
     } catch (err) {
       next(err);
@@ -22,7 +23,8 @@ export default class UserController {
       const result = await this.userService.registrationDoctor(req.body);
       res.status(STATUSES.Created).json({
         message: MESSAGES.REGISTRATION_OK,
-        token: result,
+        doctor: result.doctor,
+        token: result.token,
       });
     } catch (err) {
       next(err);

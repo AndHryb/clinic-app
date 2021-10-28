@@ -19,16 +19,17 @@ export default class UserService {
       const salt = bcrypt.genSaltSync(10);
       const { password } = data;
       const role = USER_TYPE.PATIENT;
-      const user = await this.userRepository.add(data.email, bcrypt.hashSync(password, salt), role);
       const options = {
         name: data.name,
+        email: data.email,
+        password: bcrypt.hashSync(password, salt),
         gender: data.gender,
         birthday: new Date(data.birthday),
-        userId: user.id,
+        role,
       };
-      await this.patientRepository.add(options);
-      const token = this.constructor.createToken(user);
-      return token;
+      const result = await this.patientRepository.create(options);
+      const token = this.constructor.createToken(result.user);
+      return { patient: result.patient, token };
     } catch (err) {
       console.log(`User service registration error :${err.name} : ${err.message}`);
       throw err;
@@ -44,16 +45,16 @@ export default class UserService {
       const salt = bcrypt.genSaltSync(10);
       const { password } = data;
       const role = USER_TYPE.DOCTOR;
-      const user = await this.userRepository.add(data.email, bcrypt.hashSync(password, salt), role);
       const options = {
         name: data.name,
         email: data.email,
-        userId: user.id,
+        password: bcrypt.hashSync(password, salt),
+        role,
         specNames: data.specNames,
       };
-      await this.doctorRepository.create(options);
-      const token = this.constructor.createToken(user);
-      return token;
+      const result = await this.doctorRepository.create(options);
+      const token = this.constructor.createToken(result.user);
+      return { doctor: result.doctor, token };
     } catch (err) {
       console.log(`User service registrationDoctor error :${err.name} : ${err.message}`);
       throw err;

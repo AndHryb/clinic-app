@@ -26,16 +26,16 @@ class Injector {
     } else {
       const sequelize = sequelizeInit();
       const {
-        resolutionsSQLDB, patientsSQLDB, usersSQLDB, doctorsSQLDB, specialtiesSQLDB,
+        resolutions, patients, users, doctors, specializations, doctorsSpecializations
       } = sequelize.models;
       this.resolutionRepository = new ResolutionSqlRepository(
-        resolutionsSQLDB, patientsSQLDB, doctorsSQLDB,
+        resolutions, patients, doctors,
       );
-      this.patientRepository = new PatientSqlRepository(patientsSQLDB, resolutionsSQLDB);
-      this.userRepository = new UserSqlRepository(usersSQLDB);
+      this.patientRepository = new PatientSqlRepository(
+        sequelize, patients, resolutions, users);
+      this.userRepository = new UserSqlRepository(users);
       this.doctorRepository = new DoctorRepository(
-        sequelize, doctorsSQLDB, specialtiesSQLDB, usersSQLDB,
-      );
+        sequelize, doctors, specializations, users, doctorsSpecializations);
       const client = redisInit();
       this.queueRepository = new QueueRedisRepository(client);
     }
@@ -49,7 +49,7 @@ class Injector {
     this.userService = new UserService(
       this.userRepository, this.patientRepository, this.doctorRepository,
     );
-    this.doctorService = new DoctorService(this.doctorRepository);
+    this.doctorService = new DoctorService(this.doctorRepository, this.userRepository);
     this.queueController = new QueueController(
       this.queueService, this.userService, this.doctorService,
     );

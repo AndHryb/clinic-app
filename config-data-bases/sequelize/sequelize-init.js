@@ -4,7 +4,7 @@ import patientModel from '../../models/patient-model.js';
 import resolutionModel from '../../models/resolution-model.js';
 import userModel from '../../models/user-model.js';
 import doctorModel from '../../models/doctor-model.js';
-import specialityModel from '../../models/speciality-model.js';
+import specModel from '../../models/spec-model.js';
 import { envConfig } from '../../config.js';
 
 const { Sequelize } = pkg;
@@ -31,12 +31,14 @@ export default function sequelizeInit() {
     resolutionModel,
     userModel,
     doctorModel,
-    specialityModel,
+    specModel,
   ];
 
   for (const modelDefiner of modelDefiners) {
     modelDefiner(sequelize);
   }
+
+
 
   applyExtraSetup(sequelize);
 

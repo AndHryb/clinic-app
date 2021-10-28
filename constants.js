@@ -14,7 +14,7 @@ export const MESSAGES = {
   EMAIL_NOT_FOUND: 'The email  was not found in the database,go to registration.',
   REGISTRATION_OK: 'Successful registration.',
   LOGIN_OK: 'Login successful.',
-  PASSWORD_NOT_MATCH: 'the password for this don\'t match.',
+  PASSWORD_NOT_MATCH: 'the password don\'t match.',
   QUEUE_EMPTY: 'The queue is empty.',
   ALL_QUEUES_EMPTY: 'The all queues is empty.',
   RESOLUTIONS_NOT_FOUND: 'The resolution not found in the database.',
@@ -24,6 +24,11 @@ export const MESSAGES = {
   TOKEN_EXPIRED: 'JWT expired, log in again',
   NO_USER: 'User not found in Database',
   UNCORECT_DATA: 'Fill out the form with the correct data',
+  NO_SPECS: 'Specialization(s) not found in the database',
+  SPECS_NOT_CHANGED: 'The specializations have not been changed, as they coincide with the old ones',
+  EMAL_NOT_CHANGED: 'The email has not been changed because it matches the old one',
+  NAME_NOT_CHANGED: 'The name has not been changed, as it matches the old one',
+  UPDATE_FAIL: 'fill correct update form',
 };
 
 export const STATUSES = {

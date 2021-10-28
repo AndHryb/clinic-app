@@ -21,4 +21,9 @@ export default class UserSqlRepository {
 
     return result;
   }
+
+  async getById(id) {
+    const result = await this.model.findByPk(id);
+    return result;
+  }
 }

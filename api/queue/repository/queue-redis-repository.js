@@ -3,6 +3,7 @@ import { promisify } from 'util';
 export default class QueueRedisRepository {
   constructor(redisClient) {
     this.client = redisClient;
+    this.quesKeys = 'queuesHash';
   }
 
   async get(docId) {
@@ -12,13 +13,14 @@ export default class QueueRedisRepository {
     }
     const firstInQueue = promisify(this.client.lindex).bind(this.client);
     const result = await firstInQueue(docId, 0);
-    console.log(result);
     return result;
   }
 
   async add(patientId, docId) {
     const addResult = promisify(this.client.rpush).bind(this.client);
+    const docHash = promisify(this.client.hset).bind(this.client);
     await addResult(docId, patientId);
+    await docHash(this.quesKeys, docId);
 
     return patientId;
   }
@@ -42,6 +44,10 @@ export default class QueueRedisRepository {
   }
 
   async getAll() {
+    // const data = promisify(this.client.hkeys).bind(this.client);
+    // const result = await data(this.quesKeys);
+    // console.log('>>>>>>>>>>>>>>>>>>>');
+    // console.log(result);
     const data = promisify(this.client.scan).bind(this.client);
     const result = await data(0);
     const queueData = {};
