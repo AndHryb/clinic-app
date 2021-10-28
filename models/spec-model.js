@@ -2,8 +2,8 @@ import pkg from 'sequelize';
 
 const { DataTypes, UUIDV4 } = pkg;
 
-export default function specialityModel(sequelize) {
-  const model = sequelize.define('specialtiesSQLDB', {
+export default function specModel(sequelize) {
+  const model = sequelize.define('specializations', {
     id: {
       type: DataTypes.UUID,
       defaultValue: UUIDV4,

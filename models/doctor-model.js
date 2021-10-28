@@ -3,7 +3,7 @@ import pkg from 'sequelize';
 const { DataTypes, UUIDV4 } = pkg;
 
 export default function doctorModel(sequelize) {
-  const model = sequelize.define('doctorsSQLDB', {
+  const model = sequelize.define('doctors', {
     id: {
       type: DataTypes.UUID,
       defaultValue: UUIDV4,
