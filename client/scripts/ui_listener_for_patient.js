@@ -1,4 +1,5 @@
 import { authClient } from './auth-api.js';
+
 authClient.getCookieToken('patient-token');
 // if(!authClient.token){
 //   window.location = './patient-login.html'
@@ -13,18 +14,9 @@ const dropDownSpec = document.getElementById('speciality-list');
 addBtnForPatientName.addEventListener('click', async () => {
   const dropDownDoc = document.getElementById('doctors-list');
   try {
-    let response = await authClient.client.post('/queue', 
-    { docID: dropDownDoc.value, spec: dropDownSpec.value }
-    // {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json;charset=utf-8',
-    //   },
-    //   body: JSON.stringify({ docID: dropDownDoc.value, spec: dropDownSpec.value }),
-    // }
+    const response = await authClient.client.post('/queue',
+      { docID: dropDownDoc.value, spec: dropDownSpec.value },
     );
-
-    //response = await response.json();
     const data = await response.data;
     console.log(data);
   } catch (err) {
@@ -32,21 +24,10 @@ addBtnForPatientName.addEventListener('click', async () => {
   }
 });
 
-// const subscribe = async () => {
-//   const eventSource = new EventSource('/patient/connect');
-//   eventSource.onmessage = function (event) {
-//     const result = JSON.parse(event.data);
-//     displayPatientName.textContent = result;
-//   };
-// };
-//
-// subscribe();
-
 window.addEventListener('load', async () => {
   try {
     const response = await authClient.client.get('/queue/all');
     const data = await response.data;
-    
 
     const queueTable = document.createElement('table');
     queueTable.setAttribute('class', 'queue_table');
@@ -67,7 +48,6 @@ window.addEventListener('load', async () => {
 
     queueTable.appendChild(head);
 
-
     data.forEach((elem) => {
       const tr = document.createElement('tr');
 
@@ -86,7 +66,6 @@ window.addEventListener('load', async () => {
       queueTable.appendChild(tr);
     });
     displayPatientName.appendChild(queueTable);
-
   } catch (err) {
     console.log(err.response.data);
   }
@@ -132,10 +111,13 @@ window.addEventListener('load', async () => {
     console.log(err.response.data);
   }
 });
+
 window.addEventListener('load', async () => {
   try {
     const response = await authClient.client.get('/doctor/all');
     const doctors = await response.data;
+
+    console.log(doctors);
 
     const spec = new Set();
     doctors.forEach((elem) => {

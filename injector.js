@@ -11,6 +11,7 @@ import ResolutionSqlRepository from './api/resolution/repository/resolution-sql-
 import PatientSqlRepository from './api/patient/repository/patient-sql-repository.js';
 import UserSqlRepository from './api/auth/repository/user-sql-repository.js';
 import DoctorRepository from './api/doctor/repository/doctor.repository.js';
+import DoctorRedisRepository from './api/doctor/repository/doctorRedisRepository.js';
 import sequelizeInit from './config-data-bases/sequelize/sequelize-init.js';
 import redisInit from './config-data-bases/redis/redis-init.js';
 import { TTL } from './constants.js';
@@ -22,34 +23,50 @@ class Injector {
       this.patientRepository = new PatientSqlRepository();
       this.userRepository = new UserSqlRepository();
       this.doctorRepository = new DoctorRepository();
+      this.doctorRedisRepository = new DoctorRedisRepository();
       this.queueRepository = new QueueRedisRepository();
     } else {
       const sequelize = sequelizeInit();
+      const redisClient = redisInit();
       const {
-        resolutions, patients, users, doctors, specializations, doctorsSpecializations
+        resolutions, patients, users, doctors, specializations, doctorsSpecializations,
       } = sequelize.models;
       this.resolutionRepository = new ResolutionSqlRepository(
         resolutions, patients, doctors,
       );
       this.patientRepository = new PatientSqlRepository(
-        sequelize, patients, resolutions, users);
+        sequelize, patients, resolutions, users,
+      );
       this.userRepository = new UserSqlRepository(users);
       this.doctorRepository = new DoctorRepository(
-        sequelize, doctors, specializations, users, doctorsSpecializations);
-      const client = redisInit();
-      this.queueRepository = new QueueRedisRepository(client);
+        sequelize, doctors, specializations, users, doctorsSpecializations,
+      );
+      this.queueRepository = new QueueRedisRepository(redisClient);
+      this.doctorRedisRepository = new DoctorRedisRepository(redisClient);
     }
 
     this.queueService = new QueueService(
-      this.patientRepository, this.queueRepository, this.doctorRepository,
+      this.patientRepository,
+      this.queueRepository,
+      this.doctorRepository,
     );
     this.resolutionServise = new ResolutionService(
-      this.queueRepository, this.resolutionRepository, this.patientRepository, TTL,
+      this.queueRepository,
+      this.resolutionRepository,
+      this.patientRepository,
+      TTL,
     );
     this.userService = new UserService(
-      this.userRepository, this.patientRepository, this.doctorRepository,
+      this.userRepository,
+      this.patientRepository,
+      this.doctorRepository,
+      this.doctorRedisRepository,
     );
-    this.doctorService = new DoctorService(this.doctorRepository, this.userRepository);
+    this.doctorService = new DoctorService(
+      this.doctorRepository,
+      this.doctorRedisRepository,
+      this.userRepository,
+    );
     this.queueController = new QueueController(
       this.queueService, this.userService, this.doctorService,
     );

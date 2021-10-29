@@ -7,7 +7,6 @@ export default async function checkJWT(req, res, next) {
   try {
     let token;
     if (req.headers.authorization) {
-      console.log(req.headers.authorization);
       token = req.headers.authorization.split(' ')[1];
     } else {
       throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);

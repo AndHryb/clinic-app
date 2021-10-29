@@ -74,7 +74,7 @@ export default function applyExtraSetup(sequelize) {
     as: 'doctors',
   });
 
-  sequelize.sync({/*force: true*/ })
+  sequelize.sync({ /* force: true */ })
     .then(() => console.log('sync'))
     .catch((error) => console.log('This error occurred', error));
 }

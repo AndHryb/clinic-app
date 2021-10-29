@@ -3,8 +3,9 @@ import { MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 export default class DoctorService {
-  constructor(doctorRepository, userRepository) {
+  constructor(doctorRepository, doctorRedisRepository, userRepository) {
     this.doctorRepository = doctorRepository;
+    this.doctorRedisRepository = doctorRedisRepository;
     this.userRepository = userRepository;
   }
 
@@ -80,9 +81,18 @@ export default class DoctorService {
 
       if (changeIndicator) {
         result = await this.doctorRepository.updateById(updateOptions);
-      }else{
+      } else {
         throw ApiError.badRequest(MESSAGES.UPDATE_FAIL);
       }
+
+      const updateCashOptions = {
+        docId: options.id,
+        name: options.name,
+        oldSpecs: handledOldSpecs,
+        newSpecs: handledNewSpecs,
+      };
+
+      await this.doctorRedisRepository.update(updateCashOptions);
 
       return result;
     } catch (err) {
@@ -97,6 +107,7 @@ export default class DoctorService {
       if (!res) {
         throw ApiError.notFound(MESSAGES.NO_DOC);
       }
+      await this.doctorRedisRepository.delete(id);
       return res;
     } catch (err) {
       console.log(`Doctor service deleteById error :${err.name} : ${err.message}`);
@@ -106,7 +117,13 @@ export default class DoctorService {
 
   async getDoctors() {
     try {
+      const cash = await this.doctorRedisRepository.getAll();
+      if (!(cash.lenght === 0)) {
+        console.log('cahed data');
+        return cash;
+      }
       const res = await this.doctorRepository.getDoctors();
+      console.log(res);
       if (!res) {
         throw ApiError.notFound(MESSAGES.NO_DOC);
       }

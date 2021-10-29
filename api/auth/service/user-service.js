@@ -4,10 +4,13 @@ import { USER_TYPE, MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error_handling/ApiError.js';
 
 export default class UserService {
-  constructor(userRepository, patientRepository, doctorRepository) {
+  constructor(
+    userRepository, patientRepository, doctorRepository, doctorRedisRepository,
+  ) {
     this.userRepository = userRepository;
     this.patientRepository = patientRepository;
     this.doctorRepository = doctorRepository;
+    this.doctorRedisRepository = doctorRedisRepository;
   }
 
   async registration(data) {
@@ -54,6 +57,11 @@ export default class UserService {
       };
       const result = await this.doctorRepository.create(options);
       const token = this.constructor.createToken(result.user);
+      await this.doctorRedisRepository.add(
+        result.doctor.id,
+        result.doctor.name,
+        data.specNames,
+      );
       return { doctor: result.doctor, token };
     } catch (err) {
       console.log(`User service registrationDoctor error :${err.name} : ${err.message}`);

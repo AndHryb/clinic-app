@@ -38,8 +38,6 @@ export default function sequelizeInit() {
     modelDefiner(sequelize);
   }
 
-
-
   applyExtraSetup(sequelize);
 
   return sequelize;
