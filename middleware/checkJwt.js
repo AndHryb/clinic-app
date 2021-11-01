@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { MESSAGES } from '../constants.js';
 import { injector } from '../injector.js';
-import ApiError from './error_handling/ApiError.js';
+import ApiError from './error-handling/ApiError.js';
 
 export default async function checkJWT(req, res, next) {
   try {

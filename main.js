@@ -1,15 +1,14 @@
 import express from 'express';
 import path from 'path';
 import bodyParser from 'body-parser';
-//import passport from 'passport';
 import doctorRouter from './routes/doctor-router.js';
 import resolutionRouter from './routes/resolution-router.js';
 import queueRouter from './routes/queue-router.js';
 import { envConfig } from './config.js';
 import userRouter from './routes/user-router.js';
-import apiErrorHandler from './middleware/error_handling/api-error-handler.js';
+import apiErrorHandler from './middleware/error-handling/api-error-handler.js'
 import checkJWT from './middleware/checkJwt.js';
-//import checkToken from './helpers/pssport.js';
+
 
 
 const app = express();

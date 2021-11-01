@@ -34,7 +34,6 @@ class AuthApi {
     try {
       const response = await this.client.post('/auth/registration', formData);
       const data = await response.data;
-      console.log(data);
       if (data.token) {
         this.token = `${data.token}`;
         return data.message;
@@ -46,7 +45,6 @@ class AuthApi {
   }
 
   getCookieToken(tokenName) {
-    //console.log(document.cookie);
     try{
       const allCookies = document.cookie.split(';');
     let cookiesObj = {};
