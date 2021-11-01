@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs';
+import clc from 'cli-color';
+
 import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 export default class DoctorService {
   constructor(doctorRepository, doctorRedisRepository, userRepository) {
@@ -92,7 +94,8 @@ export default class DoctorService {
         newSpecs: handledNewSpecs,
       };
 
-      await this.doctorRedisRepository.update(updateCashOptions);
+      const cachResult = await this.doctorRedisRepository.update(updateCashOptions);
+      if (cachResult) console.log(clc.red('cach updated'));
 
       return result;
     } catch (err) {
@@ -107,7 +110,8 @@ export default class DoctorService {
       if (!res) {
         throw ApiError.notFound(MESSAGES.NO_DOC);
       }
-      await this.doctorRedisRepository.delete(id);
+      const deletedFromCach = await this.doctorRedisRepository.delete(id);
+      if (deletedFromCach) console.log(clc.red('cache cleared'));
       return res;
     } catch (err) {
       console.log(`Doctor service deleteById error :${err.name} : ${err.message}`);
@@ -117,16 +121,17 @@ export default class DoctorService {
 
   async getDoctors() {
     try {
-      const cash = await this.doctorRedisRepository.getAll();
-      if (!(cash.lenght === 0)) {
-        console.log('cahed data');
-        return cash;
+      const cache = await this.doctorRedisRepository.getAll();
+      if (cache && !(cache.length === 0)) {
+        console.log(clc.red('cahed data'));
+        return cache;
       }
       const res = await this.doctorRepository.getDoctors();
-      console.log(res);
       if (!res) {
         throw ApiError.notFound(MESSAGES.NO_DOC);
       }
+      const dataCached = await this.doctorRedisRepository.setData(res);
+      if (dataCached) console.log(clc.red('response cached'));
 
       return res;
     } catch (err) {

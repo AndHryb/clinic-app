@@ -21,7 +21,6 @@ userRouter.post('/registration', async (req, res, next) => {
 }, userController.registration.bind(userController));
 
 userRouter.post('/registration-doctor', async (req, res, next) => {
-  console.log(req.body);
   if (ajv.validate(checkDocRegistrationData, req.body)) {
     next();
   } else { res.status(STATUSES.BadRequest).json('Fill out the form with the correct data'); }

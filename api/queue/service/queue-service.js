@@ -1,4 +1,4 @@
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 import { MESSAGES } from '../../../constants.js';
 
 export default class QueueService {

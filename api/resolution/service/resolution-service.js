@@ -1,5 +1,5 @@
 import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 export default class ResolutionService {
   constructor(queueRepository, resolutionRepository, patientRepository, TTL) {
@@ -36,7 +36,7 @@ export default class ResolutionService {
 
   async addResolution(resolution, docId, spec) {
     try {
-      const queueLength = await this.queueRepository.getLength(docId);
+      const queueLength = await this.queueRepository.getLength(`q${docId}`);
       if (queueLength === 0) {
         throw ApiError.conflict(MESSAGES.QUEUE_EMPTY);
       }
@@ -51,7 +51,7 @@ export default class ResolutionService {
 
       return patientId;
     } catch (err) {
-      console.log(`Resolution service getByID error :${err.name} : ${err.message}`);
+      console.log(`Resolution service addResolution error :${err.name} : ${err.message}`);
       throw err;
     }
   }

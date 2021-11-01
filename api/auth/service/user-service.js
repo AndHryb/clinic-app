@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import clc from 'cli-color';
 import { USER_TYPE, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 export default class UserService {
   constructor(
@@ -57,11 +58,12 @@ export default class UserService {
       };
       const result = await this.doctorRepository.create(options);
       const token = this.constructor.createToken(result.user);
-      await this.doctorRedisRepository.add(
+      const updateCache = await this.doctorRedisRepository.add(
         result.doctor.id,
         result.doctor.name,
         data.specNames,
       );
+      if (updateCache) console.log(clc.red('cache updated'));
       return { doctor: result.doctor, token };
     } catch (err) {
       console.log(`User service registrationDoctor error :${err.name} : ${err.message}`);

@@ -8,6 +8,7 @@ export default class QueueRedisRepository {
 
   async get(docId) {
     const listLength = await this.getLength(`q${docId}`);
+    console.log(listLength);
     if (listLength === 0) {
       return false;
     }
@@ -37,9 +38,9 @@ export default class QueueRedisRepository {
     return result;
   }
 
-  async getLength(docId) {
+  async getLength(key) {
     const listLength = promisify(this.client.llen).bind(this.client);
-    const result = await listLength(`q${docId}`);
+    const result = await listLength(key);
 
     return result;
   }
