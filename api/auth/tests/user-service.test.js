@@ -6,8 +6,9 @@ import UserService from '../service/user-service.js';
 import UserSqlRepository from '../repository/user-sql-repository.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
+import DoctorRedisRepository from '../../doctor/repository/doctorRedisRepository.js';
 import ApiError from '../../../middleware/error_handling/ApiError.js';
-import { STATUSES } from '../../../constants.js';
+import { MESSAGES, STATUSES } from '../../../constants.js';
 
 const patientsSQLDBMock = new SequelizeMock();
 const usersSQLDBMock = new SequelizeMock();
@@ -16,12 +17,18 @@ const doctorSQLDBMock = new SequelizeMock();
 const patientSqlRepository = new PatientSqlRepository(patientsSQLDBMock);
 const userSqlRepository = new UserSqlRepository(usersSQLDBMock);
 const doctorSqlRepository = new DoctorRepository(doctorSQLDBMock);
-const userService = new UserService(userSqlRepository, patientSqlRepository, doctorSqlRepository);
+const doctorRedisRepository = new DoctorRedisRepository();
+const userService = new UserService(
+  userSqlRepository,
+  patientSqlRepository,
+  doctorSqlRepository,
+  doctorRedisRepository,
+);
 
 jest.mock('../repository/user-sql-repository.js');
 jest.mock('../../patient/repository/patient-sql-repository.js');
 jest.mock('../../doctor/repository/doctor.repository.js');
-jest.mock('jsonwebtoken');
+jest.mock('../../doctor/repository/doctorRedisRepository.js');
 
 describe('user service unit test', () => {
   let testTime;
@@ -78,30 +85,17 @@ describe('user service unit test', () => {
     myError = ApiError.forbidden('foo');
   });
 
-  test('create token ', async () => {
-    jwt.sign = jest.fn(() => '111');
-    const res = UserService.createToken(userData);
-    expect(res).toEqual('111');
-  });
-
-  test('create token(some error) ', async () => {
-    try {
-      jwt.sign = jest.fn(() => { throw serverErr; });
-      const res = UserService.createToken(userData);
-      expect(res).toEqual('111');
-    } catch (err) {
-      expect(err).toBeInstanceOf(Error);
-      expect(err.message).toBe('some error');
-    }
-  });
-
   test('registration test', async () => {
     userSqlRepository.getByEmail.mockResolvedValue(false);
     patientSqlRepository.create.mockResolvedValue(regResPatient);
-    UserService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
     const res = await userService.registration(regData);
     expect(res.patient).toEqual(patientData);
-    expect(res.token).toEqual('valid_token_111');
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
   });
 
   test('registration test(email in base)', async () => {
@@ -128,18 +122,26 @@ describe('user service unit test', () => {
   test('registration doctor test', async () => {
     userSqlRepository.getByEmail.mockResolvedValue(false);
     doctorSqlRepository.create.mockResolvedValue(regResDoctor);
-    UserService.createToken = jest.fn(() => 'valid_token_111');//  check payload or sums///
+    doctorRedisRepository.add.mockResolvedValue(true);
     const res = await userService.registrationDoctor(regData);
-    expect(res.token).toEqual('valid_token_111');
+    expect(doctorRedisRepository.add).toBeCalled();
     expect(res.doctor).toEqual(patientData);
-  }); test('registration doctor test(email in base)', async () => {
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
+  });
+
+  test('registration doctor test(email in base)', async () => {
     try {
-      userSqlRepository.getByEmail = jest.fn(() => { throw myError; });
+      userSqlRepository.getByEmail = jest.fn(() => true);
       await userService.registrationDoctor(regData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
-      expect(err.message).toBe('foo');
-      expect(err.statusCode).toBe(STATUSES.Forbidden);
+      expect(err.message).toBe(MESSAGES.EMAIL_EXIST);
+      expect(err.statusCode).toBe(STATUSES.Conflict);
     }
   });
 
@@ -157,9 +159,14 @@ describe('user service unit test', () => {
     const salt = bcrypt.genSaltSync(10);
     userData.password = bcrypt.hashSync(userData.password, salt);
     userSqlRepository.getByEmail.mockResolvedValue(userData);
-    UserService.createToken = jest.fn(() => 'valid_token_111');
     const res = await userService.login(regData);
-    expect(res).toEqual({ role: 'patient', token: 'valid_token_111' });
+    expect(res.role).toEqual('patient');
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
   });
 
   test('login, email doesn\'t match', async () => {
@@ -225,6 +232,27 @@ describe('user service unit test', () => {
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.message).toBe('foo');
+    }
+  });
+
+  test('create token ', async () => {
+    const res = UserService.createToken(userData);
+    expect(jwt.verify(res, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
+  });
+
+  test('create token(some error) ', async () => {
+    try {
+      jwt.sign = jest.fn(() => { throw serverErr; });
+      const res = UserService.createToken(userData);
+      expect(res).toEqual('111');
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
     }
   });
 });

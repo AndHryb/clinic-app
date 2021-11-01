@@ -1,12 +1,18 @@
 import bcrypt from 'bcryptjs';
 import DoctorService from '../service/doctor.service.js';
 import DoctorRepository from '../repository/doctor.repository.js';
+import DoctorRedisRepository from '../repository/doctorRedisRepository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
 import { STATUSES, MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error_handling/ApiError.js';
+import { not } from 'ajv/dist/compile/codegen';
 
-const doctorService = new DoctorService(new DoctorRepository(), new UserSqlRepository());
-const { doctorRepository, userRepository } = doctorService;
+const doctorService = new DoctorService(
+  new DoctorRepository(),
+  new DoctorRedisRepository(),
+  new UserSqlRepository(),
+);
+const { doctorRepository, doctorRedisRepository, userRepository } = doctorService;
 
 describe('doctor service have to', () => {
   const serverErr = new Error('some error');
@@ -55,6 +61,7 @@ describe('doctor service have to', () => {
       oldSpecs: ['surgery', 'gynecology'],
       newSpecs: ['anaesthesiologist', 'cardiologist'],
     }));
+    doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
     expect(res.doctor).toEqual({
@@ -72,6 +79,7 @@ describe('doctor service have to', () => {
     expect(userRepository.getById).toHaveBeenCalled();
     expect(doctorRepository.getSpec).toHaveBeenCalled();
     expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(doctorRedisRepository.update).toHaveBeenCalled();
   });
 
   test('update doctor(without email)', async () => {
@@ -85,6 +93,7 @@ describe('doctor service have to', () => {
       oldSpecs: ['surgery', 'gynecology'],
       newSpecs: ['anaesthesiologist', 'cardiologist'],
     }));
+    doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
     expect(res.doctor).toEqual({
@@ -102,6 +111,7 @@ describe('doctor service have to', () => {
     expect(userRepository.getById).toHaveBeenCalled();
     expect(doctorRepository.getSpec).toHaveBeenCalled();
     expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(doctorRedisRepository.update).toHaveBeenCalled();
   });
 
   test('update doctor(without name)', async () => {
@@ -115,6 +125,7 @@ describe('doctor service have to', () => {
       oldSpecs: ['surgery', 'gynecology'],
       newSpecs: ['anaesthesiologist', 'cardiologist'],
     }));
+    doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
     expect(res.doctor).toEqual({
@@ -132,6 +143,7 @@ describe('doctor service have to', () => {
     expect(userRepository.getById).toHaveBeenCalled();
     expect(doctorRepository.getSpec).toHaveBeenCalled();
     expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(doctorRedisRepository.update).toHaveBeenCalled();
   });
 
   test('update doctor(without spec list)', async () => {
@@ -145,6 +157,7 @@ describe('doctor service have to', () => {
       oldSpecs: undefined,
       newSpecs: undefined,
     }));
+    doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
     expect(res.doctor).toEqual({
@@ -162,6 +175,7 @@ describe('doctor service have to', () => {
     expect(userRepository.getById).toHaveBeenCalled();
     expect(doctorRepository.getSpec).not.toHaveBeenCalled();
     expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(doctorRedisRepository.update).toHaveBeenCalled();
   });
 
   test('failed wiht update (the emails match)', async () => {
@@ -171,6 +185,7 @@ describe('doctor service have to', () => {
       userRepository.getById = jest.fn(() => userData);
       doctorRepository.getSpec = jest.fn(() => specData);
       doctorRepository.updateById = jest.fn(() => 1);
+      doctorRedisRepository.update = jest.fn(() => false);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
@@ -180,6 +195,7 @@ describe('doctor service have to', () => {
       expect(userRepository.getById).toHaveBeenCalled();
       expect(doctorRepository.getSpec).not.toHaveBeenCalled();
       expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
@@ -190,6 +206,7 @@ describe('doctor service have to', () => {
       userRepository.getById = jest.fn(() => userData);
       doctorRepository.getSpec = jest.fn(() => specData);
       doctorRepository.updateById = jest.fn(() => 1);
+      doctorRedisRepository.update = jest.fn(() => false);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
@@ -199,6 +216,7 @@ describe('doctor service have to', () => {
       expect(userRepository.getById).not.toHaveBeenCalled();
       expect(doctorRepository.getSpec).not.toHaveBeenCalled();
       expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
@@ -209,6 +227,7 @@ describe('doctor service have to', () => {
       userRepository.getById = jest.fn(() => userData);
       doctorRepository.getSpec = jest.fn(() => specData);
       doctorRepository.updateById = jest.fn(() => 1);
+      doctorRedisRepository.update = jest.fn(() => false);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
@@ -218,6 +237,7 @@ describe('doctor service have to', () => {
       expect(userRepository.getById).toHaveBeenCalled();
       expect(doctorRepository.getSpec).not.toHaveBeenCalled();
       expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
@@ -228,6 +248,7 @@ describe('doctor service have to', () => {
       userRepository.getById = jest.fn(() => userData);
       doctorRepository.getSpec = jest.fn(() => specData);
       doctorRepository.updateById = jest.fn(() => 1);
+      doctorRedisRepository.update = jest.fn(() => false);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
@@ -237,6 +258,7 @@ describe('doctor service have to', () => {
       expect(userRepository.getById).toHaveBeenCalled();
       expect(doctorRepository.getSpec).toHaveBeenCalled();
       expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
@@ -249,6 +271,7 @@ describe('doctor service have to', () => {
       userRepository.getById = jest.fn(() => userData);
       doctorRepository.getSpec = jest.fn(() => specData);
       doctorRepository.updateById = jest.fn(() => 1);
+      doctorRedisRepository.update = jest.fn(() => false);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
@@ -258,6 +281,7 @@ describe('doctor service have to', () => {
       expect(userRepository.getById).not.toHaveBeenCalled();
       expect(doctorRepository.getSpec).not.toHaveBeenCalled();
       expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
@@ -273,20 +297,24 @@ describe('doctor service have to', () => {
 
   test('delete doctor', async () => {
     doctorRepository.deleteById = jest.fn(() => [{ name: 'joe', id: '5', userId: '10' }]);
+    doctorRedisRepository.delete = jest.fn(() => true);
     const res = await doctorService.deleteById(docId);
     expect(res[0].name).toBe('joe');
     expect(res[0].id).toBe('5');
     expect(res[0].userId).toBe('10');
+    expect(doctorRedisRepository.delete).toHaveBeenCalled();
   });
 
   test('failed wiht delete by id(handled error)', async () => {
     try {
       doctorRepository.deleteById = jest.fn(() => false);
+      doctorRedisRepository.delete = jest.fn(() => false);
       await doctorService.deleteById(docId);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.statusCode).toBe(STATUSES.NotFound);
       expect(err.message).toBe(MESSAGES.NO_DOC);
+      expect(doctorRedisRepository.delete).not.toHaveBeenCalled();
     }
   });
 
@@ -300,13 +328,36 @@ describe('doctor service have to', () => {
     }
   });
 
-  test('get all doctors', async () => {
-    doctorRepository.getDoctors = jest.fn(() => [{ name: 'joe', id: '4', userId: '10' }]);
+  test('get all doctors(cache empty)', async () => {
+    doctorRedisRepository.getAll = jest.fn(() => false);
+    doctorRepository.getDoctors = jest.fn(
+      () => [{ name: 'joe', id: '4', userId: '10' }]);
+    doctorRedisRepository.setData = jest.fn(() => true);
     const res = await doctorService.getDoctors();
 
     expect(res[0].name).toBe('joe');
     expect(res[0].id).toBe('4');
     expect(res[0].userId).toBe('10');
+
+    expect(doctorRedisRepository.getAll).toHaveBeenCalled();
+    expect(doctorRepository.getDoctors).toHaveBeenCalled();
+    expect(doctorRedisRepository.setData).toHaveBeenCalled();
+  });
+
+  test('get all doctors(data cached)', async () => {
+    doctorRedisRepository.getAll = jest.fn(() => (
+      [{ name: 'joe', id: '4', userId: '10' }]));
+    doctorRepository.getDoctors = jest.fn();
+    doctorRedisRepository.setData = jest.fn();
+    const res = await doctorService.getDoctors();
+
+    expect(res[0].name).toBe('joe');
+    expect(res[0].id).toBe('4');
+    expect(res[0].userId).toBe('10');
+
+    expect(doctorRedisRepository.getAll).toHaveBeenCalled();
+    expect(doctorRepository.getDoctors).not.toHaveBeenCalled();
+    expect(doctorRedisRepository.setData).not.toHaveBeenCalled();
   });
 
   test('failed wiht get all doctors(handled error)', async () => {
