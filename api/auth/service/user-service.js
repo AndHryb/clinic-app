@@ -58,11 +58,11 @@ export default class UserService {
       };
       const result = await this.doctorRepository.create(options);
       const token = this.constructor.createToken(result.user);
-      const updateCache = await this.doctorRedisRepository.add(
-        result.doctor.id,
-        result.doctor.name,
-        data.specNames,
-      );
+      const updateCache = await this.doctorRedisRepository.add({
+        docId: result.doctor.id,
+        name: result.doctor.name,
+        specs: data.specNames,
+      });
       if (updateCache) console.log(clc.red('cache updated'));
       return { doctor: result.doctor, token };
     } catch (err) {

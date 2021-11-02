@@ -65,7 +65,6 @@ class Injector {
     this.doctorService = new DoctorService(
       this.doctorRepository,
       this.doctorRedisRepository,
-      this.userRepository,
     );
     this.queueController = new QueueController(
       this.queueService, this.userService, this.doctorService,

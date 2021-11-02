@@ -47,48 +47,6 @@ export default class DoctorRepository {
     }
   }
 
-  async updateById(options) {
-    try {
-      const result = await this.sequelize.transaction(async (t) => {
-        await options.doctor.save({ transaction: t });
-        if (options.user) await options.user.save({ transaction: t });
-        if (options.newSpecs) {
-          const specs = await this.specModel.findAll({
-            where: {
-              name: {
-                [Op.or]: options.newSpecs,
-              },
-            },
-            transaction: t,
-          });
-
-          for (const spec of specs) {
-            spec.addDoctor(options.doctor);
-          }
-
-          const brokenBindings = await this.specModel.findAll({
-            where: {
-              name: {
-                [Op.or]: options.oldSpecs,
-              },
-            },
-            transaction: t,
-          });
-
-          for (const spec of brokenBindings) {
-            spec.removeDoctor(options.doctor);
-          }
-        }
-
-        return options;
-      });
-      return result;
-    } catch (err) {
-      console.log(`Doctor repository updateById error ${err.message}`);
-      throw err;
-    }
-  }
-
   async deleteById(id) {
     const result = await this.sequelize.transaction(async (t) => {
       const doctor = await this.docModel.findOne({
@@ -175,8 +133,60 @@ export default class DoctorRepository {
     return res;
   }
 
+  async setSpecsByName(doc, newSpecsList, oldSpecsList) {
+    const result = await this.sequelize.transaction(async (t) => {
+      const specs = await this.specModel.findAll({
+        where: {
+          name: {
+            [Op.or]: newSpecsList,
+          },
+        },
+        transaction: t,
+      });
+
+      for (const spec of specs) {
+        await spec.addDoctor(doc);
+      }
+
+      const brokenBindings = await this.specModel.findAll({
+        where: {
+          name: {
+            [Op.or]: oldSpecsList,
+          },
+        },
+        transaction: t,
+      });
+
+      for (const spec of brokenBindings) {
+        await spec.removeDoctor(doc);
+      }
+      await doc.update();
+
+      return doc;
+    });
+
+    return result;
+  }
+
   async getById(id) {
     const res = await this.docModel.findByPk(id);
     return res;
+  }
+
+  async getAllDependencies(docId) {
+    const docData = await this.docModel.findOne({
+      where: {
+        id: docId,
+      },
+      include: [
+        {
+          model: this.specModel,
+          as: 'specialties',
+        },
+        { model: this.userModel },
+      ],
+    });
+
+    return docData;
   }
 }

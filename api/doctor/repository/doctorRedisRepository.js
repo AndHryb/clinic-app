@@ -3,8 +3,7 @@ import { promisify } from 'util';
 export default class DoctorRedisRepository {
   constructor(redisClient) {
     this.client = redisClient;
-    this.specSetName = 'specSet';
-    this.docSet = 'docSet';
+    this.doctorHash = 'docHash';
   }
 
   async setTTL(key) {
@@ -16,24 +15,27 @@ export default class DoctorRedisRepository {
     }
   }
 
-  async add(docId, name, specs) {
+  async add(options) {
     try {
-      const getHash = promisify(this.client.hgetall).bind(this.client);
-      const setAdd = promisify(this.client.sadd).bind(this.client);
-      for (const spec of specs) {
-        await setAdd(`s${docId}`, spec);
-      }
-      this.setTTL(`s${docId}`);
-
       const hashSet = promisify(this.client.hset).bind(this.client);
-      await hashSet(docId, 'name', name);
-      await hashSet(docId, 'specs', `s${docId}`);
-      this.setTTL(docId);
 
-      await setAdd(this.docSet, docId);
-      this.setTTL(this.docSet);
+      const specs = [];
 
-      return getHash(docId);
+      options.specs.forEach((elem, i) => {
+        specs[i] = {
+          name: elem,
+        };
+      });
+      const docData = {
+        id: options.docId,
+        name: options.name,
+        specialties: specs,
+      };
+
+      await hashSet(this.doctorHash, options.docId, JSON.stringify(docData));
+      this.setTTL(this.doctorHash);
+
+      return docData;
     } catch (err) {
       console.log(`doctor redis repository add error ${err}`);
     }
@@ -41,25 +43,30 @@ export default class DoctorRedisRepository {
 
   async update(options) {
     try {
-      const getHash = promisify(this.client.hgetall).bind(this.client);
-      if (options.newSpecs) {
-        const addResult = promisify(this.client.sadd).bind(this.client);
-        for (const spec of options.newSpecs) {
-          await addResult(`s${options.docId}`, spec);
+      const hashGet = promisify(this.client.hget).bind(this.client);
+
+      const oldData = JSON.parse(await hashGet(this.doctorHash, options.docId));
+
+      if (oldData) {
+        const specs = [];
+        if (options.specs) {
+          options.specs.forEach((elem, i) => {
+            specs[i] = {
+              name: elem,
+            };
+          });
+          oldData.specialties = specs;
         }
 
-        const delResult = promisify(this.client.srem).bind(this.client);
-        for (const spec of options.oldSpecs) {
-          await delResult(`s${options.docId}`, spec);
+        if (options.name) {
+          oldData.name = options.name;
         }
-        this.setTTL(`s${options.docId}`);
+        const hashSet = promisify(this.client.hset).bind(this.client);
+        await hashSet(this.doctorHash, options.docId, JSON.stringify(oldData));
+        this.setTTL(this.doctorHash);
       }
 
-      const doctorHash = promisify(this.client.hset).bind(this.client);
-      await doctorHash(options.docId, 'name', options.name);
-      this.setTTL(options.docId);
-
-      return await getHash(options.docId);
+      return oldData;
     } catch (err) {
       console.log(`doctor redis repository update error ${err}`);
     }
@@ -67,10 +74,9 @@ export default class DoctorRedisRepository {
 
   async delete(docId) {
     try {
-      const delResult = promisify(this.client.del).bind(this.client);
-      const deleted = await delResult(docId, `s${docId}`, `q${docId}`);
-      const delSet = promisify(this.client.srem).bind(this.client);
-      await delSet(this.docSet, docId);
+      const delResult = promisify(this.client.hdel).bind(this.client);
+      const deleted = await delResult(this.doctorHash, docId);
+
       return deleted;
     } catch (err) {
       console.log(`doctor redis repository delete error ${err}`);
@@ -79,25 +85,12 @@ export default class DoctorRedisRepository {
 
   async getAll() {
     try {
-      const memebers = promisify(this.client.smembers).bind(this.client);
-      const set = await memebers(this.docSet);
+      const getKeys = promisify(this.client.hkeys).bind(this.client);
+      const hGet = promisify(this.client.hget).bind(this.client);
+      const keys = await getKeys(this.doctorHash);
       const docData = [];
-      for (const elem of set) {
-        const key = promisify(this.client.hget).bind(this.client);
-        const name = await key(elem, 'name');
-        const speclist = promisify(this.client.smembers).bind(this.client);
-        const specs = await speclist(`s${elem}`);
-        if (specs.length === 0) {
-          continue;
-        }
-        specs.forEach((spec, i) => {
-          specs[i] = { name: spec };
-        });
-        docData.push({
-          name,
-          id: elem,
-          specialties: specs,
-        });
+      for (const key of keys) {
+        docData.push(JSON.parse(await hGet(this.doctorHash, key)));
       }
       return docData;
     } catch (err) {
@@ -107,21 +100,23 @@ export default class DoctorRedisRepository {
 
   async setData(data) {
     try {
-      const members = promisify(this.client.smembers).bind(this.client);
-      const setAdd = promisify(this.client.sadd).bind(this.client);
       const hashSet = promisify(this.client.hset).bind(this.client);
       for (const elem of data) {
-        await setAdd(this.docSet, elem.id);
-        this.setTTL(this.docSet);
+        const specs = [];
         for (const spec of elem.specialties) {
-          await setAdd(`s${elem.id}`, spec.name);
+          specs.push({ name: spec.name });
         }
-        this.setTTL(`s${elem.id}`);
-        await hashSet(elem.id, 'name', elem.name);
-        await hashSet(elem.id, 'specs', `s${elem.id}`);
-        this.setTTL(elem.id);
+
+        const docData = {
+          id: elem.id,
+          name: elem.name,
+          specialties: specs,
+        };
+
+        await hashSet(this.doctorHash, elem.id, JSON.stringify(docData));
       }
-      return await members(this.docSet);
+      this.setTTL(this.doctorHash);
+      return data;
     } catch (err) {
       console.log(`doctor redis repository setData error ${err}`);
     }
