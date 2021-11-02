@@ -7,7 +7,7 @@ import UserSqlRepository from '../repository/user-sql-repository.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
 import DoctorRedisRepository from '../../doctor/repository/doctorRedisRepository.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 import { MESSAGES, STATUSES } from '../../../constants.js';
 
 const patientsSQLDBMock = new SequelizeMock();

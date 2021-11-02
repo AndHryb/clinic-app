@@ -5,7 +5,7 @@ import ResolutionSqlRepository from '../repository/resolution-sql-repository.js'
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
 import QueueRedisRepository from '../../queue/repository/queue-redis-repository.js';
 import { STATUSES, TTL } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const client = redis.createClient();
 const patientsSQLDBMock = new SequelizeMock();
@@ -14,7 +14,8 @@ const resolutionsSQLDBMock = new SequelizeMock();
 const resolutionSqlRepository = new ResolutionSqlRepository(resolutionsSQLDBMock);
 const patientSqlRepository = new PatientSqlRepository(patientsSQLDBMock);
 const queueRedisRepository = new QueueRedisRepository(client);
-const resolutionService = new ResolutionService(queueRedisRepository, resolutionSqlRepository, patientSqlRepository, TTL);
+const resolutionService = new ResolutionService(
+  queueRedisRepository, resolutionSqlRepository, patientSqlRepository, TTL);
 
 jest.mock('../repository/resolution-sql-repository.js');
 jest.mock('../../patient/repository/patient-sql-repository.js');

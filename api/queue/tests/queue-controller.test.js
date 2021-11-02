@@ -10,7 +10,7 @@ import QueueRedisRepository from '../repository/queue-redis-repository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
 
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const usersSQLDB = new SequelizeMock();
 const doctorSQLDB = new SequelizeMock();

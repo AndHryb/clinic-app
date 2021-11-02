@@ -1,12 +1,12 @@
 import * as httpMocks from 'node-mocks-http';
 import SequelizeMock from 'sequelize-mock';
-import { STATUSES, NO_RIGHT_TO_DELETE_MSG, MESSAGES } from '../../../constants.js';
+import { STATUSES, MESSAGES } from '../../../constants.js';
 import ResolutionController from '../controllers/resolution-controller.js';
 import ResolutionService from '../service/resolution-service.js';
 import DoctorService from '../../doctor/service/doctor.service.js';
 import ResolutionSqlRepository from '../repository/resolution-sql-repository.js';
 import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const resolutionsSQLDB = new SequelizeMock();
 const doctorSQLDB = new SequelizeMock();
@@ -33,8 +33,6 @@ describe('resolution controller unit test', () => {
   let myError;
   let next;
   const testRegTime = (new Date()).getTime();
-  const myErr1 = new Error('not found');
-  const myErr2 = new Error(NO_RIGHT_TO_DELETE_MSG);
 
   beforeEach(() => {
     next = jest.fn();

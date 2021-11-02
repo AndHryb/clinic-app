@@ -4,290 +4,208 @@ import DoctorRepository from '../repository/doctor.repository.js';
 import DoctorRedisRepository from '../repository/doctorRedisRepository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
 import { STATUSES, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error_handling/ApiError.js';
-import { not } from 'ajv/dist/compile/codegen';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const doctorService = new DoctorService(
   new DoctorRepository(),
   new DoctorRedisRepository(),
   new UserSqlRepository(),
 );
-const { doctorRepository, doctorRedisRepository, userRepository } = doctorService;
+const { doctorRepository, doctorRedisRepository} = doctorService;
 
 describe('doctor service have to', () => {
   const serverErr = new Error('some error');
   let updateData;
   let docId;
-  let userData;
-  let specData;
   let docData;
+  const oldSpecs = ['pediatrician', 'surgery'];
+  const newSpecs = ['anaesthesiologist', 'cardiologist'];
   const salt = bcrypt.genSaltSync(10);
   beforeEach(() => {
     updateData = {
       id: '5',
-      name: 'Bob',
-      email: 'doc@doc',
+      name: 'Bobbi',
+      email: 'd@d',
       oldPassword: '9876',
       newPassword: '1111',
       specNames: ['anaesthesiologist', 'cardiologist'],
     };
     docId = '5';
-    userData = {
-      email: 'd@d',
-      password: bcrypt.hashSync('9876', salt),
-      id: '2',
-    };
-    specData = {
-      specialties: [
-        { name: 'surgery' },
-        { name: 'gynecology' },
-      ],
-    };
     docData = {
-      name: 'joe',
-      id: '4',
-      userId: '10',
-      email: 'd@d',
+      id: '1',
+      name: 'Bob',
+      email: 'doc@doc',
+      userId: '2',
+      specialties: [
+        {
+          id: '2',
+          name: 'pediatrician',
+          doctorsSpecializations: {
+            doctorId: '1',
+            specializationId: '2',
+          },
+        },
+        {
+          id: '1',
+          name: 'surgery',
+          doctorsSpecializations: {
+            doctorId: '1',
+            specializationId: '1',
+          },
+        },
+      ],
+      user: {
+        id: '2',
+        email: 'doc@doc',
+        password: bcrypt.hashSync('9876', salt),
+        role: 'doctor',
+        save: jest.fn(),
+      },
+      save: jest.fn(),
     };
   });
 
   test('update doctor(all fields)', async () => {
-    doctorRepository.getById = jest.fn(() => docData);
-    userRepository.getById = jest.fn(() => userData);
-    doctorRepository.getSpec = jest.fn(() => specData);
-    doctorRepository.updateById = jest.fn(() => ({
-      doctor: docData,
-      user: userData,
-      oldSpecs: ['surgery', 'gynecology'],
-      newSpecs: ['anaesthesiologist', 'cardiologist'],
-    }));
+    doctorRepository.getAllDependencies = jest.fn(() => docData);
+    doctorRepository.setSpecsByName = jest.fn((docData) => {
+      docData.specialties[0].name = newSpecs[0];
+      docData.specialties[1].name = newSpecs[1];
+      return docData;
+    });
     doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
-    expect(res.doctor).toEqual({
-      name: 'Bob',
-      id: '4',
-      userId: '10',
-      email: 'doc@doc',
-    });
-    expect(res.user.email).toEqual('doc@doc');
-    expect(res.user.id).toEqual('2');
+    expect(res.name).toEqual('Bobbi');
+    expect(res.email).toEqual('d@d');
+    expect(res.user.email).toEqual('d@d');
     expect(bcrypt.compareSync('1111', res.user.password)).toBeTruthy();
-    expect(res.oldSpecs).toEqual(['surgery', 'gynecology']);
-    expect(res.newSpecs).toEqual(['anaesthesiologist', 'cardiologist']);
-    expect(doctorRepository.getById).toHaveBeenCalled();
-    expect(userRepository.getById).toHaveBeenCalled();
-    expect(doctorRepository.getSpec).toHaveBeenCalled();
-    expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(res.specialties[0].name).toEqual(newSpecs[0]);
+    expect(res.specialties[1].name).toEqual(newSpecs[1]);
+    expect(doctorRepository.setSpecsByName).toHaveBeenCalled();
     expect(doctorRedisRepository.update).toHaveBeenCalled();
+    expect(res.save).toHaveBeenCalled();
+    expect(res.user.save).toHaveBeenCalled();
   });
 
   test('update doctor(without email)', async () => {
     updateData.email = false;
-    doctorRepository.getById = jest.fn(() => docData);
-    userRepository.getById = jest.fn(() => userData);
-    doctorRepository.getSpec = jest.fn(() => specData);
-    doctorRepository.updateById = jest.fn(() => ({
-      doctor: docData,
-      user: userData,
-      oldSpecs: ['surgery', 'gynecology'],
-      newSpecs: ['anaesthesiologist', 'cardiologist'],
-    }));
+    doctorRepository.getAllDependencies = jest.fn(() => docData);
+    doctorRepository.setSpecsByName = jest.fn((docData) => {
+      docData.specialties[0].name = newSpecs[0];
+      docData.specialties[1].name = newSpecs[1];
+      return docData;
+    });
     doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
-    expect(res.doctor).toEqual({
-      name: 'Bob',
-      id: '4',
-      userId: '10',
-      email: 'd@d',
-    });
-    expect(res.user.email).toEqual('d@d');
-    expect(res.user.id).toEqual('2');
+    expect(res.name).toEqual('Bobbi');
+    expect(res.email).toEqual('doc@doc');
+    expect(res.user.email).toEqual('doc@doc');
     expect(bcrypt.compareSync('1111', res.user.password)).toBeTruthy();
-    expect(res.oldSpecs).toEqual(['surgery', 'gynecology']);
-    expect(res.newSpecs).toEqual(['anaesthesiologist', 'cardiologist']);
-    expect(doctorRepository.getById).toHaveBeenCalled();
-    expect(userRepository.getById).toHaveBeenCalled();
-    expect(doctorRepository.getSpec).toHaveBeenCalled();
-    expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(res.specialties[0].name).toEqual(newSpecs[0]);
+    expect(res.specialties[1].name).toEqual(newSpecs[1]);
+    expect(doctorRepository.setSpecsByName).toHaveBeenCalled();
     expect(doctorRedisRepository.update).toHaveBeenCalled();
+    expect(res.save).toHaveBeenCalled();
+    expect(res.user.save).toHaveBeenCalled();
   });
 
   test('update doctor(without name)', async () => {
     updateData.name = false;
-    doctorRepository.getById = jest.fn(() => docData);
-    userRepository.getById = jest.fn(() => userData);
-    doctorRepository.getSpec = jest.fn(() => specData);
-    doctorRepository.updateById = jest.fn(() => ({
-      doctor: docData,
-      user: userData,
-      oldSpecs: ['surgery', 'gynecology'],
-      newSpecs: ['anaesthesiologist', 'cardiologist'],
-    }));
+    doctorRepository.getAllDependencies = jest.fn(() => docData);
+    doctorRepository.setSpecsByName = jest.fn((docData) => {
+      docData.specialties[0].name = newSpecs[0];
+      docData.specialties[1].name = newSpecs[1];
+      return docData;
+    });
     doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
-    expect(res.doctor).toEqual({
-      name: 'joe',
-      id: '4',
-      userId: '10',
-      email: 'doc@doc',
-    });
-    expect(res.user.email).toEqual('doc@doc');
-    expect(res.user.id).toEqual('2');
+    expect(res.name).toEqual('Bob');
+    expect(res.email).toEqual('d@d');
+    expect(res.user.email).toEqual('d@d');
     expect(bcrypt.compareSync('1111', res.user.password)).toBeTruthy();
-    expect(res.oldSpecs).toEqual(['surgery', 'gynecology']);
-    expect(res.newSpecs).toEqual(['anaesthesiologist', 'cardiologist']);
-    expect(doctorRepository.getById).toHaveBeenCalled();
-    expect(userRepository.getById).toHaveBeenCalled();
-    expect(doctorRepository.getSpec).toHaveBeenCalled();
-    expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(res.specialties[0].name).toEqual(newSpecs[0]);
+    expect(res.specialties[1].name).toEqual(newSpecs[1]);
+    expect(doctorRepository.setSpecsByName).toHaveBeenCalled();
     expect(doctorRedisRepository.update).toHaveBeenCalled();
+    expect(res.save).toHaveBeenCalled();
+    expect(res.user.save).toHaveBeenCalled();
   });
 
   test('update doctor(without spec list)', async () => {
     updateData.specNames = false;
-    doctorRepository.getById = jest.fn(() => docData);
-    userRepository.getById = jest.fn(() => userData);
-    doctorRepository.getSpec = jest.fn(() => specData);
-    doctorRepository.updateById = jest.fn(() => ({
-      doctor: docData,
-      user: userData,
-      oldSpecs: undefined,
-      newSpecs: undefined,
-    }));
+    doctorRepository.getAllDependencies = jest.fn(() => docData);
     doctorRedisRepository.update = jest.fn(() => true);
     const res = await doctorService.updateById(updateData);
 
-    expect(res.doctor).toEqual({
-      name: 'Bob',
-      id: '4',
-      userId: '10',
-      email: 'doc@doc',
-    });
-    expect(res.user.email).toEqual('doc@doc');
-    expect(res.user.id).toEqual('2');
+    expect(res.name).toEqual('Bobbi');
+    expect(res.email).toEqual('d@d');
+    expect(res.user.email).toEqual('d@d');
     expect(bcrypt.compareSync('1111', res.user.password)).toBeTruthy();
-    expect(res.oldSpecs).toBeFalsy();
-    expect(res.newSpecs).toBeFalsy();
-    expect(doctorRepository.getById).toHaveBeenCalled();
-    expect(userRepository.getById).toHaveBeenCalled();
-    expect(doctorRepository.getSpec).not.toHaveBeenCalled();
-    expect(doctorRepository.updateById).toHaveBeenCalled();
+    expect(res.specialties[0].name).toEqual(oldSpecs[0]);
+    expect(res.specialties[1].name).toEqual(oldSpecs[1]);
     expect(doctorRedisRepository.update).toHaveBeenCalled();
-  });
-
-  test('failed wiht update (the emails match)', async () => {
-    try {
-      updateData.email = 'd@d';
-      doctorRepository.getById = jest.fn(() => docData);
-      userRepository.getById = jest.fn(() => userData);
-      doctorRepository.getSpec = jest.fn(() => specData);
-      doctorRepository.updateById = jest.fn(() => 1);
-      doctorRedisRepository.update = jest.fn(() => false);
-      await doctorService.updateById(updateData);
-    } catch (err) {
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(STATUSES.BadRequest);
-      expect(err.message).toBe(MESSAGES.EMAL_NOT_CHANGED);
-      expect(doctorRepository.getById).toHaveBeenCalled();
-      expect(userRepository.getById).toHaveBeenCalled();
-      expect(doctorRepository.getSpec).not.toHaveBeenCalled();
-      expect(doctorRepository.updateById).not.toHaveBeenCalled();
-      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
-    }
-  });
-
-  test('failed wiht update (the names match)', async () => {
-    try {
-      updateData.name = 'joe';
-      doctorRepository.getById = jest.fn(() => docData);
-      userRepository.getById = jest.fn(() => userData);
-      doctorRepository.getSpec = jest.fn(() => specData);
-      doctorRepository.updateById = jest.fn(() => 1);
-      doctorRedisRepository.update = jest.fn(() => false);
-      await doctorService.updateById(updateData);
-    } catch (err) {
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(STATUSES.BadRequest);
-      expect(err.message).toBe(MESSAGES.NAME_NOT_CHANGED);
-      expect(doctorRepository.getById).toHaveBeenCalled();
-      expect(userRepository.getById).not.toHaveBeenCalled();
-      expect(doctorRepository.getSpec).not.toHaveBeenCalled();
-      expect(doctorRepository.updateById).not.toHaveBeenCalled();
-      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
-    }
+    expect(res.save).toHaveBeenCalled();
+    expect(res.user.save).toHaveBeenCalled();
   });
 
   test('failed wiht update (the passwords not match)', async () => {
     try {
       updateData.oldPassword = '9877';
-      doctorRepository.getById = jest.fn(() => docData);
-      userRepository.getById = jest.fn(() => userData);
-      doctorRepository.getSpec = jest.fn(() => specData);
-      doctorRepository.updateById = jest.fn(() => 1);
-      doctorRedisRepository.update = jest.fn(() => false);
+      doctorRepository.getAllDependencies = jest.fn(() => docData);
+      doctorRepository.setSpecsByName = jest.fn();
+      doctorRedisRepository.update = jest.fn(() => true);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.statusCode).toBe(STATUSES.Forbidden);
       expect(err.message).toBe(MESSAGES.PASSWORD_NOT_MATCH);
-      expect(doctorRepository.getById).toHaveBeenCalled();
-      expect(userRepository.getById).toHaveBeenCalled();
-      expect(doctorRepository.getSpec).not.toHaveBeenCalled();
-      expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRepository.setSpecsByName).not.toHaveBeenCalled();
       expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
   test('failed wiht update (the specNames match to specList in database)', async () => {
+    updateData.specNames = oldSpecs;
     try {
-      updateData.specNames = ['surgery', 'gynecology'];
-      doctorRepository.getById = jest.fn(() => docData);
-      userRepository.getById = jest.fn(() => userData);
-      doctorRepository.getSpec = jest.fn(() => specData);
-      doctorRepository.updateById = jest.fn(() => 1);
-      doctorRedisRepository.update = jest.fn(() => false);
+      doctorRepository.getAllDependencies = jest.fn(() => docData);
+      doctorRepository.setSpecsByName = jest.fn();
+      doctorRedisRepository.update = jest.fn(() => true);
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect(err.statusCode).toBe(STATUSES.BadRequest);
       expect(err.message).toBe(MESSAGES.SPECS_NOT_CHANGED);
-      expect(doctorRepository.getById).toHaveBeenCalled();
-      expect(userRepository.getById).toHaveBeenCalled();
-      expect(doctorRepository.getSpec).toHaveBeenCalled();
-      expect(doctorRepository.updateById).not.toHaveBeenCalled();
+      expect(doctorRepository.setSpecsByName).not.toHaveBeenCalled();
       expect(doctorRedisRepository.update).not.toHaveBeenCalled();
     }
   });
 
   test('failed wiht update (object contains only id)', async () => {
-    try {
-      updateData = {
-        id: '5',
-      };
-      doctorRepository.getById = jest.fn(() => docData);
-      userRepository.getById = jest.fn(() => userData);
-      doctorRepository.getSpec = jest.fn(() => specData);
-      doctorRepository.updateById = jest.fn(() => 1);
-      doctorRedisRepository.update = jest.fn(() => false);
-      await doctorService.updateById(updateData);
-    } catch (err) {
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(STATUSES.BadRequest);
-      expect(err.message).toBe(MESSAGES.UPDATE_FAIL);
-      expect(doctorRepository.getById).toHaveBeenCalled();
-      expect(userRepository.getById).not.toHaveBeenCalled();
-      expect(doctorRepository.getSpec).not.toHaveBeenCalled();
-      expect(doctorRepository.updateById).not.toHaveBeenCalled();
-      expect(doctorRedisRepository.update).not.toHaveBeenCalled();
-    }
+    updateData = {
+      id: '5',
+    };
+    doctorRepository.getAllDependencies = jest.fn(() => docData);
+    doctorRepository.setSpecsByName = jest.fn();
+    doctorRedisRepository.update = jest.fn(() => true);
+    const res = await doctorService.updateById(updateData);
+
+    expect(res.name).toEqual('Bob');
+    expect(res.email).toEqual('doc@doc');
+    expect(res.user.email).toEqual('doc@doc');
+    expect(bcrypt.compareSync('9876', res.user.password)).toBeTruthy();
+    expect(res.specialties[0].name).toEqual(oldSpecs[0]);
+    expect(res.specialties[1].name).toEqual(oldSpecs[1]);
+    expect(doctorRepository.setSpecsByName).not.toHaveBeenCalled();
+    expect(doctorRedisRepository.update).toHaveBeenCalled();
+    expect(res.save).toHaveBeenCalled();
+    expect(res.user.save).toHaveBeenCalled();
   });
 
   test('failed wiht update by id(unhandled error)', async () => {
     try {
-      doctorRepository.getById = jest.fn(() => { throw serverErr; });
+      doctorRepository.getAllDependencies = jest.fn(() => { throw serverErr; });
       await doctorService.updateById(updateData);
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
@@ -331,7 +249,8 @@ describe('doctor service have to', () => {
   test('get all doctors(cache empty)', async () => {
     doctorRedisRepository.getAll = jest.fn(() => false);
     doctorRepository.getDoctors = jest.fn(
-      () => [{ name: 'joe', id: '4', userId: '10' }]);
+      () => [{ name: 'joe', id: '4', userId: '10' }],
+    );
     doctorRedisRepository.setData = jest.fn(() => true);
     const res = await doctorService.getDoctors();
 
@@ -436,7 +355,7 @@ describe('doctor service have to', () => {
   test('get spec(server error)', async () => {
     try {
       doctorRepository.getSpecByUserId = jest.fn(() => { throw serverErr; });
-      const res = await doctorService.getSpecByUserId('4');
+      await doctorService.getSpecByUserId('4');
     } catch (err) {
       expect(err).toBeInstanceOf(Error);
       expect(err.message).toBe('some error');
