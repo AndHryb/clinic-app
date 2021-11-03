@@ -20,7 +20,7 @@ export default class ResolutionController {
 
   async getResolutionByToken(req, res, next) {
     try {
-      const{userId} = req.payload;
+      const { userId } = req.payload;
       const result = await this.resolutionService.getResolutionByUserId(userId);
       res.set('Content-Type', 'application/json;charset=utf-8');
       res.status(STATUSES.OK).json({
@@ -53,6 +53,7 @@ export default class ResolutionController {
       res.set('Content-Type', 'application/json;charset=utf-8');
       res.status(STATUSES.NoContent).json({
         message: MESSAGES.RESOLUTION_DELETED,
+        resolution: result,
       });
     } catch (err) {
       next(err);

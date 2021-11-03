@@ -18,9 +18,7 @@ export default class DoctorService {
         name: null,
         specs: null,
       };
-      if (!doctor) {
-        throw ApiError.notFound(MESSAGES.NO_DOC);
-      }
+      if (!doctor) throw ApiError.notFound(MESSAGES.NO_DOC);
 
       if (options.name) {
         doctor.name = options.name;
@@ -58,9 +56,7 @@ export default class DoctorService {
   async deleteById(id) {
     try {
       const res = await this.doctorRepository.deleteById(id);
-      if (!res) {
-        throw ApiError.notFound(MESSAGES.NO_DOC);
-      }
+      if (!res) throw ApiError.notFound(MESSAGES.NO_DOC);
       const deletedFromCach = await this.doctorRedisRepository.delete(id);
       if (deletedFromCach) console.log(clc.red('cache cleared'));
       return res;
@@ -78,9 +74,7 @@ export default class DoctorService {
         return cache;
       }
       const res = await this.doctorRepository.getDoctors();
-      if (!res) {
-        throw ApiError.notFound(MESSAGES.NO_DOC);
-      }
+      if (!res) throw ApiError.notFound(MESSAGES.NO_DOC);
       const dataCached = await this.doctorRedisRepository.setData(res);
       if (dataCached) console.log(clc.red('response cached'));
 
@@ -94,9 +88,7 @@ export default class DoctorService {
   async getByUserId(userId) {
     try {
       const res = await this.doctorRepository.getByUserId(userId);
-      if (!res) {
-        throw ApiError.notFound(MESSAGES.NO_DOC);
-      }
+      if (!res) throw ApiError.notFound(MESSAGES.NO_DOC);
 
       return res;
     } catch (err) {
@@ -108,9 +100,7 @@ export default class DoctorService {
   async getSpecByUserId(userId) {
     try {
       const res = await this.doctorRepository.getSpecByUserId(userId);
-      if (!res) {
-        throw ApiError.notFound(MESSAGES.NO_DOC);
-      }
+      if (!res) throw ApiError.notFound(MESSAGES.NO_DOC);
 
       return res;
     } catch (err) {

@@ -18,19 +18,6 @@ export default class UserController {
     }
   }
 
-  // async registrationDoctor(req, res, next) {
-  //   try {
-  //     const result = await this.userService.registrationDoctor(req.body);
-  //     res.status(STATUSES.Created).json({
-  //       message: MESSAGES.REGISTRATION_OK,
-  //       doctor: result.doctor,
-  //       token: result.token,
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // }
-
   async login(req, res, next) {
     try {
       const result = await this.userService.login(req.body);

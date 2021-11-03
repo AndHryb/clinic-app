@@ -11,9 +11,7 @@ export default class QueueService {
   async get(docId) {
     try {
       const result = await this.queueRepository.get(docId);
-      if (!result) {
-        throw ApiError.notFound(MESSAGES.QUEUE_EMPTY);
-      }
+      if (!result) throw ApiError.notFound(MESSAGES.QUEUE_EMPTY);
       const patient = await this.patientRepository.getById(result);
 
       return patient.name;
@@ -67,9 +65,7 @@ export default class QueueService {
         });
       }
 
-      if (queues.length === 0) {
-        throw ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
-      }
+      if (queues.length === 0) throw ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
 
       return queues;
     } catch (err) {
