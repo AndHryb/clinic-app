@@ -1,4 +1,5 @@
 import { promisify } from 'util';
+import { envConfig } from '../../../config.js';
 
 export default class DoctorRedisRepository {
   constructor(redisClient) {
@@ -9,7 +10,7 @@ export default class DoctorRedisRepository {
   async setTTL(key) {
     try {
       const TTL = promisify(this.client.expire).bind(this.client);
-      await TTL(key, process.env.DOC_LIST_TTL);
+      await TTL(key, envConfig.redis.ttl);
     } catch (err) {
       console.log(`set TTL doctor redis repository error ${err}`);
     }

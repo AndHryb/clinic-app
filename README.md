@@ -56,11 +56,12 @@ ___
 **Запустить docker compose:** 
 Построить образ,если  не актуальный
 ````
-    docker build -t anhryb/clinic-app:latest .
+    docker build -t anhryb/clinic-app:latest -f docker/Dockerfile .
 ````
  
-Убедиться что порт 3000 не занят !!!
+Убедиться что порт 3000 не занят, перейти в папку docker и выполнить команды
 ````
+    cd docker
     docker compose up -d
 ````
 
