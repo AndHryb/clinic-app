@@ -38,7 +38,7 @@ export default class DoctorRepository {
         for (const spec of specs) {
           spec.addDoctor(doctor);
         }
-        return { doctor, user };
+        return { entity: doctor, user };
       });
       return result;
     } catch (err) {

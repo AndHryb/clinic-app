@@ -23,7 +23,7 @@ export default class PatientSqlRepository {
           userId: user.id,
         }, { transaction: t });
 
-        return { patient, user };
+        return { entity: patient, user };
       });
       return result;
     } catch (err) {

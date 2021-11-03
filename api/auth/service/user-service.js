@@ -17,56 +17,64 @@ export default class UserService {
   async registration(data) {
     try {
       const candidate = await this.userRepository.getByEmail(data.email);
-      if (candidate) {
-        throw ApiError.conflict(MESSAGES.EMAIL_EXIST);
-      }
-      const salt = bcrypt.genSaltSync(10);
-      const { password } = data;
-      const role = USER_TYPE.PATIENT;
-      const options = {
-        name: data.name,
-        email: data.email,
-        password: bcrypt.hashSync(password, salt),
-        gender: data.gender,
-        birthday: new Date(data.birthday),
-        role,
-      };
-      const result = await this.patientRepository.create(options);
+      if (candidate) throw ApiError.conflict(MESSAGES.EMAIL_EXIST);
+      const result = await (data.role === USER_TYPE.PATIENT
+        ? this.createPatient(data)
+        : this.createDoctor(data));
       const token = this.constructor.createToken(result.user);
-      return { patient: result.patient, token };
+      const { entity } = result;
+
+      return { entity, token };
     } catch (err) {
       console.log(`User service registration error :${err.name} : ${err.message}`);
       throw err;
     }
   }
 
-  async registrationDoctor(data) {
+  static async encryptPassword(password) {
     try {
-      const candidate = await this.userRepository.getByEmail(data.email);
-      if (candidate) {
-        throw ApiError.conflict(MESSAGES.EMAIL_EXIST);
-      }
       const salt = bcrypt.genSaltSync(10);
-      const { password } = data;
-      const role = USER_TYPE.DOCTOR;
+
+      return bcrypt.hashSync(password, salt);
+    } catch (err) {
+      console.log(`User service encryptPassword error :${err.name} : ${err.message}`);
+      throw err;
+    }
+  }
+
+  async createPatient(data) {
+    try {
       const options = {
-        name: data.name,
-        email: data.email,
-        password: bcrypt.hashSync(password, salt),
-        role,
-        specNames: data.specNames,
+        ...data,
+        password: await this.constructor.encryptPassword(data.password),
+        birthday: new Date(data.birthday),
+      };
+      const result = await this.patientRepository.create(options);
+
+      return result;
+    } catch (err) {
+      console.log(`User service createPatient error :${err.name} : ${err.message}`);
+      throw err;
+    }
+  }
+
+  async createDoctor(data) {
+    try {
+      const options = {
+        ...data,
+        password: await this.constructor.encryptPassword(data.password),
       };
       const result = await this.doctorRepository.create(options);
-      const token = this.constructor.createToken(result.user);
       const updateCache = await this.doctorRedisRepository.add({
-        docId: result.doctor.id,
-        name: result.doctor.name,
+        docId: result.entity.id,
+        name: result.entity.name,
         specs: data.specNames,
       });
       if (updateCache) console.log(clc.red('cache updated'));
-      return { doctor: result.doctor, token };
+
+      return result;
     } catch (err) {
-      console.log(`User service registrationDoctor error :${err.name} : ${err.message}`);
+      console.log(`User service createDoctor error :${err.name} : ${err.message}`);
       throw err;
     }
   }
@@ -74,13 +82,9 @@ export default class UserService {
   async login(data) {
     try {
       const candidate = await this.userRepository.getByEmail(data.email);
-      if (!candidate) {
-        throw ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
-      }
+      if (!candidate) throw ApiError.unauthorized(MESSAGES.EMAIL_NOT_FOUND);
       const resultPassword = bcrypt.compareSync(data.password, candidate.password);
-      if (!resultPassword) {
-        throw ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
-      }
+      if (!resultPassword) throw ApiError.unauthorized(MESSAGES.PASSWORD_NOT_MATCH);
       const token = this.constructor.createToken(candidate);
 
       return { token, role: candidate.role };
@@ -92,16 +96,11 @@ export default class UserService {
 
   async getByUserId(payload) {
     try {
-      if (!payload) {
-        throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);
-      }
+      if (!payload) throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);
       const { userId, role } = payload;
-      let result;
-      if (role === USER_TYPE.PATIENT) {
-        result = await this.patientRepository.getByUserId(userId);
-      } else {
-        result = await this.doctorRepository.getByUserId(userId);
-      }
+      const result = await (role === USER_TYPE.PATIENT
+        ? this.patientRepository.getByUserId(userId)
+        : await this.doctorRepository.getByUserId(userId));
 
       return result;
     } catch (err) {

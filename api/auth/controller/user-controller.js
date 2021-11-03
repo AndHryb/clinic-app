@@ -10,7 +10,7 @@ export default class UserController {
       const result = await this.userService.registration(req.body);
       res.status(STATUSES.Created).json({
         message: MESSAGES.REGISTRATION_OK,
-        patient: result.patient,
+        entity: result.entity,
         token: result.token,
       });
     } catch (err) {
@@ -18,18 +18,18 @@ export default class UserController {
     }
   }
 
-  async registrationDoctor(req, res, next) {
-    try {
-      const result = await this.userService.registrationDoctor(req.body);
-      res.status(STATUSES.Created).json({
-        message: MESSAGES.REGISTRATION_OK,
-        doctor: result.doctor,
-        token: result.token,
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
+  // async registrationDoctor(req, res, next) {
+  //   try {
+  //     const result = await this.userService.registrationDoctor(req.body);
+  //     res.status(STATUSES.Created).json({
+  //       message: MESSAGES.REGISTRATION_OK,
+  //       doctor: result.doctor,
+  //       token: result.token,
+  //     });
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // }
 
   async login(req, res, next) {
     try {
