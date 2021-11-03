@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import UserService from '../service/user-service.js';
 import UserSqlRepository from '../repository/user-sql-repository.js';
 import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-import DoctorRedisRepository from '../../doctor/repository/doctorRedisRepository.js';
+import DoctorRepository from '../../doctor/repository/doctor-repository.js';
+import DoctorRedisRepository from '../../doctor/repository/doctor-redis-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 import { MESSAGES, STATUSES } from '../../../constants.js';
 
@@ -27,8 +27,8 @@ const userService = new UserService(
 
 jest.mock('../repository/user-sql-repository.js');
 jest.mock('../../patient/repository/patient-sql-repository.js');
-jest.mock('../../doctor/repository/doctor.repository.js');
-jest.mock('../../doctor/repository/doctorRedisRepository.js');
+jest.mock('../../doctor/repository/doctor-repository.js');
+jest.mock('../../doctor/repository/doctor-redis-repository.js');
 
 describe('user service unit test', () => {
   let testTime;

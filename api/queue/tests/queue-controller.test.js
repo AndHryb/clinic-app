@@ -5,10 +5,10 @@ import { STATUSES } from '../../../constants.js';
 import QueueController from '../controllers/queue-controller.js';
 import QueueService from '../service/queue-service.js';
 import UserService from '../../auth/service/user-service.js';
-import DoctorService from '../../doctor/service/doctor.service.js';
+import DoctorService from '../../doctor/service/doctor-service.js';
 import QueueRedisRepository from '../repository/queue-redis-repository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor.repository.js';
+import DoctorRepository from '../../doctor/repository/doctor-repository.js';
 
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
@@ -28,7 +28,7 @@ const queueController = new QueueController(queueService, userService, doctorSer
 
 jest.mock('../../auth/service/user-service.js');// UserService
 jest.mock('../service/queue-service.js');// QueueService
-jest.mock('../../doctor/service/doctor.service.js');// DoctorService
+jest.mock('../../doctor/service/doctor-service.js');// DoctorService
 
 const docData = { id: '444', name: 'Sergei' };
 

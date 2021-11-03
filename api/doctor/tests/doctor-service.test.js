@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
-import DoctorService from '../service/doctor.service.js';
-import DoctorRepository from '../repository/doctor.repository.js';
-import DoctorRedisRepository from '../repository/doctorRedisRepository.js';
+import DoctorService from '../service/doctor-service.js';
+import DoctorRepository from '../repository/doctor-repository.js';
+import DoctorRedisRepository from '../repository/doctor-redis-repository.js';
 import UserSqlRepository from '../../auth/repository/user-sql-repository.js';
 import { STATUSES, MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
