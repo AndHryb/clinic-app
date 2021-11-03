@@ -8,7 +8,6 @@ export default class QueueRedisRepository {
 
   async get(docId) {
     const listLength = await this.getLength(`q${docId}`);
-    console.log(listLength);
     if (listLength === 0) {
       return false;
     }
@@ -60,8 +59,6 @@ export default class QueueRedisRepository {
       const resulPatient = await firstInQueue(elem, 0);
       queueData[elem.substring(1)] = { length: resultLength, next: resulPatient };
     }
-
-    console.log(queueData);
 
     return queueData;
   }

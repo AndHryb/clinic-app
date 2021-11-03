@@ -45,18 +45,17 @@ class AuthApi {
   }
 
   getCookieToken(tokenName) {
-    try{
+    try {
       const allCookies = document.cookie.split(';');
-    let cookiesObj = {};
-    allCookies.forEach((elem,i) => {
-      const curr = elem.split('=');
-      cookiesObj[curr[0].trim()] = curr[1].trim();
-    })
-    this.token = cookiesObj[tokenName];
-    }catch(err){
+      const cookiesObj = {};
+      allCookies.forEach((elem, i) => {
+        const curr = elem.split('=');
+        cookiesObj[curr[0].trim()] = curr[1].trim();
+      });
+      this.token = cookiesObj[tokenName];
+    } catch (err) {
       console.log(err);
     }
-    
   }
 }
 
