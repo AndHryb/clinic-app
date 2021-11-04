@@ -77,7 +77,7 @@ describe('resolution controller unit test', () => {
         cookie: 'doctorToken=111',
       },
       body: { docID: '111' },
-      payload : payload,
+      payload,
     });
     res = httpMocks.createResponse();
   });
@@ -136,6 +136,10 @@ describe('resolution controller unit test', () => {
     expect(res.statusCode).toEqual(STATUSES.NoContent);
     expect(res._getJSONData()).toEqual({
       message: MESSAGES.RESOLUTION_DELETED,
+      resolution: {
+        name: 'Bob',
+        regTime: testRegTime,
+      },
     });
   });
 

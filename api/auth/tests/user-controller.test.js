@@ -27,7 +27,7 @@ describe('user controller unit test', () => {
 
   beforeEach(() => {
     regResData = {
-      patient:'aaa',
+      entity: 'aaa',
       doctor: 'bbb',
       token: '--token--',
     };
@@ -60,7 +60,7 @@ describe('user controller unit test', () => {
       .toEqual(STATUSES.Created);
     expect(res._getJSONData())
       .toEqual({
-        patient: regResData.patient,
+        entity: regResData.entity,
         token: regResData.token,
         message: MESSAGES.REGISTRATION_OK,
       });
@@ -80,35 +80,8 @@ describe('user controller unit test', () => {
     expect(next).toHaveBeenCalledWith(serverErr);
   });
 
-  test('registration doctor(all ok)', async () => {
-    userService.registrationDoctor.mockResolvedValue(regResData);
-    await userController.registrationDoctor(req, res, next);
-    expect(res.statusCode)
-      .toEqual(STATUSES.Created);
-    expect(res._getJSONData())
-      .toEqual({
-        doctor: regResData.doctor,
-        token: regResData.token,
-        message: MESSAGES.REGISTRATION_OK,
-      });
-  });
-
-  test('registration doctor (email is already busy)', async () => {
-    userService.registrationDoctor = jest.fn(() => { throw myError; });
-    await userController.registrationDoctor(req, res, next);
-    expect(userService.registrationDoctor).toThrow(myError);
-    expect(next).toHaveBeenCalledWith(myError);
-  });
-
-  test('registration doctor(some server error)', async () => {
-    userService.registrationDoctor = jest.fn(() => { throw serverErr; });
-    await userController.registrationDoctor(req, res, next);
-    expect(userService.registrationDoctor).toThrow(serverErr);
-    expect(next).toHaveBeenCalledWith(serverErr);
-  });
-
   test('login(all ok)', async () => {
-    resData.token = {token:'111', role: 'patient',};
+    resData.token = { token: '111', role: 'patient' };
     userService.login.mockResolvedValue(resData.token);
     await userController.login(req, res, next);
     expect(res.statusCode)
@@ -117,7 +90,7 @@ describe('user controller unit test', () => {
       .toEqual({
         message: MESSAGES.LOGIN_OK,
         token: '111',
-        role: 'patient'
+        role: 'patient',
       });
   });
 
