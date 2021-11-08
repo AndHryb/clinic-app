@@ -46,8 +46,7 @@ export const STATUSES = {
   Unavailable: 503,
 };
 
-const TTL = 15000000;
-export { TTL };
+export const TTL = 15000000;
 
 export const USER_TYPE = {
   PATIENT: 'patient',

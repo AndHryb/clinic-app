@@ -1,18 +1,17 @@
-import SequelizeMock from 'sequelize-mock';
 import redis from 'redis-mock';
 import QueueService from '../service/queue-service.js';
-import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
+import PatientRepository from '../../patient/repository/patient-pg-repository.js';
 import QueueRedisRepository from '../repository/queue-redis-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 import { STATUSES } from '../../../constants.js';
 
 const client = redis.createClient();
-const patientsSQLDBMock = new SequelizeMock();
-const patientSqlRepository = new PatientSqlRepository(patientsSQLDBMock);
-const queueRedisRepository = new QueueRedisRepository(client);
-const queueService = new QueueService(patientSqlRepository, queueRedisRepository);
 
-jest.mock('../../patient/repository/patient-sql-repository.js');
+const patientRepository = new PatientRepository();
+const queueRedisRepository = new QueueRedisRepository(client);
+const queueService = new QueueService(patientRepository, queueRedisRepository);
+
+jest.mock('../../patient/repository/patient-pg-repository.js');
 jest.mock('../repository/queue-redis-repository.js');
 
 describe('queue service unit tests', () => {
@@ -27,7 +26,7 @@ describe('queue service unit tests', () => {
 
   test('method get', async () => {
     queueRedisRepository.get.mockResolvedValue(patientID);
-    patientSqlRepository.getById.mockResolvedValue(patientData);
+    patientRepository.getById.mockResolvedValue(patientData);
     const res = await queueService.get();
     expect(res).toEqual('Andrei');
   });
@@ -35,7 +34,7 @@ describe('queue service unit tests', () => {
   test('method get(queueRepository is empty)', async () => {
     try{
       queueRedisRepository.get = jest.fn(() => { throw myError; });
-      patientSqlRepository.getById.mockResolvedValue(false);
+      patientRepository.getById.mockResolvedValue(false);
       await queueService.get();
     }catch(err){
       expect(err).toBeInstanceOf(ApiError);
@@ -47,7 +46,7 @@ describe('queue service unit tests', () => {
   test('method get(some err)', async () => {
     try{
       queueRedisRepository.get = jest.fn(() => { throw serverErr; });
-      patientSqlRepository.getById.mockResolvedValue(false);
+      patientRepository.getById.mockResolvedValue(false);
       await queueService.get();
     }catch(err){
       expect(err).toBeInstanceOf(Error);

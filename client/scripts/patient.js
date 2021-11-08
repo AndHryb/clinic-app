@@ -15,8 +15,7 @@ addBtnForPatientName.addEventListener('click', async () => {
   const dropDownDoc = document.getElementById('doctors-list');
   try {
     const response = await authClient.client.post('/queue',
-      { docID: dropDownDoc.value, spec: dropDownSpec.value },
-    );
+      { docID: dropDownDoc.value, spec: dropDownSpec.value });
     const data = await response.data;
     console.log(data);
   } catch (err) {
@@ -84,7 +83,7 @@ window.addEventListener('load', async () => {
 
     if (data.resolution.length > 0) {
       data.resolution.forEach((elem) => {
-        const arr = elem.createdAt.split('T');
+        const arr = elem.createdat.split('T');
         const time = arr[1].substr(0, 8);
 
         const tr = document.createElement('tr');
@@ -101,7 +100,7 @@ window.addEventListener('load', async () => {
         tr.appendChild(createdAtTd);
 
         const createdByTd = document.createElement('td');
-        createdByTd.innerHTML = elem.doctor.name;
+        createdByTd.innerHTML = elem.doctor;
         tr.appendChild(createdByTd);
 
         resolutionTable.appendChild(tr);
@@ -121,8 +120,7 @@ window.addEventListener('load', async () => {
 
     const spec = new Set();
     doctors.forEach((elem) => {
-      const { specialties } = elem;
-      specialties.forEach((elem1) => spec.add(elem1.name));
+      spec.add(elem.specname);
     });
 
     for (const elem of spec) {
@@ -135,10 +133,8 @@ window.addEventListener('load', async () => {
     function createDoctors(event) {
       const dropDownDoc = document.getElementById('doctors-list');
       const spec = event.target.value;
-      const docList = doctors.filter((elem) => {
-        const { specialties } = elem;
-        return specialties.find((elem) => elem.name === spec);
-      });
+      const docList = doctors.filter((elem) =>
+        (elem.specname === spec));
 
       dropDownDoc.remove();
       const select = document.createElement('select');

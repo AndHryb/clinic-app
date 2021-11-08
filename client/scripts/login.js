@@ -61,7 +61,6 @@ document.reg_form.onsubmit = async function (EO) {
 
   try {
     const result = await authClient.login(formData);
-    console.log(result);
     if (result.role === 'patient') {
       document.cookie = `patient-token=${authClient.token};path=/;`;
       window.location = './patient.html';

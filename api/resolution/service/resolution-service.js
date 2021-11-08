@@ -23,13 +23,13 @@ export default class ResolutionService {
 
   async getResolutionByUserId(userId) {
     try {
-      const patient = await this.patientRepository.getByUserId(userId);
-      const result = await this.resolutionRepository.getByPatientId(patient.id);
+      // const patient = await this.patientRepository.getByUserId(userId);
+      const result = await this.resolutionRepository.getByPatientId(userId);
       const filtredList = this.filterTTL(result);
 
       return filtredList;
     } catch (err) {
-      console.log(`Resolution service getResolutionByToken error :${err.name} : ${err.message}`);
+      console.log(`Resolution service getResolutionByUserId error :${err.name} : ${err.message}`);
       throw err;
     }
   }
@@ -42,7 +42,7 @@ export default class ResolutionService {
       if (!patientId) throw ApiError.notFound(MESSAGES.NO_PATIENT);
       await this.resolutionRepository.add({
         patientId, resolution, docId, spec,
-      });
+      });// заменить spec на  id!!!! на  клиенте!!!
 
       return patientId;
     } catch (err) {
@@ -69,9 +69,9 @@ export default class ResolutionService {
     try {
       const resolution = await this.resolutionRepository.getById(resolutionId);
       if (!resolution) throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
-      const { doctorId } = resolution;
+      const { doctorid } = resolution;
 
-      return doctorId === docId;
+      return doctorid === docId;
     } catch (err) {
       console.log(`Resolution service isTheRightDoctor error :${err.name} : ${err.message}`);
       throw err;
@@ -83,7 +83,7 @@ export default class ResolutionService {
       throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
     }
     const filtredList = resolutionList.filter((elem) => {
-      const timeOfExistence = (new Date()).getTime() - (new Date(elem.createdAt)).getTime();
+      const timeOfExistence = (new Date()).getTime() - (new Date(elem.createdat)).getTime();
       return this.TTL > timeOfExistence;
     });
     if (!filtredList || filtredList.length === 0) {

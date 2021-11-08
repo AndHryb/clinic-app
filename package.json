@@ -10,7 +10,8 @@
     "start": "node main.js",
     "test": "jest",
     "fix": "eslint ./src --fix",
-    "start_and_seed": "node helpers/seed-sql-data/migration.js&&node main.js"
+    "start_and_seed": "node helpers/seed-sql-data/migration.js&&node main.js",
+    "pg_migrate": "node pg-migrations.js"
   },
   "keywords": [
     "express"
@@ -34,6 +35,8 @@
     "nodemon": "^2.0.12",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
+    "pg": "^8.7.1",
+    "postgres-migrations": "^5.3.0",
     "redis": "^3.1.2",
     "sequelize": "^6.6.5",
     "uuid": "^8.3.2"

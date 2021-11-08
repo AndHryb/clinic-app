@@ -1,18 +1,14 @@
 import * as httpMocks from 'node-mocks-http';
-import SequelizeMock from 'sequelize-mock';
 import { STATUSES, MESSAGES } from '../../../constants.js';
 import ResolutionController from '../controllers/resolution-controller.js';
 import ResolutionService from '../service/resolution-service.js';
 import DoctorService from '../../doctor/service/doctor-service.js';
-import ResolutionSqlRepository from '../repository/resolution-sql-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor-repository.js';
+import ResolutionRepository from '../repository/resolution-pg-repository.js';
+import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
-const resolutionsSQLDB = new SequelizeMock();
-const doctorSQLDB = new SequelizeMock();
-
-const doctorSQLRepository = new DoctorRepository(doctorSQLDB);
-const resolutionSqlRepository = new ResolutionSqlRepository(resolutionsSQLDB);
+const doctorSQLRepository = new DoctorRepository();
+const resolutionSqlRepository = new ResolutionRepository();
 
 const resolutionService = new ResolutionService(resolutionSqlRepository);
 const doctorService = new DoctorService(doctorSQLRepository);

@@ -1,4 +1,5 @@
 import { authClient } from './auth-api.js';
+
 authClient.getCookieToken('doctor-token');
 // if(!authClient.token){
 //   window.location = './doctor-login.html'
@@ -17,6 +18,7 @@ const deleteResolutionBtn = document.getElementById('del_resolution_btn');
 const deleteResolutionID = document.getElementById('del_resolution_id');
 const dropDownSpec = document.getElementById('speciality-list');
 const spec = null;
+const specList = {};
 
 async function gettCurrent() {
   try {
@@ -45,7 +47,7 @@ addBtnForResolution.addEventListener('click', async () => {
   try {
     const response = await authClient.client.post('/resolution', {
       value: doctorResolution.value,
-      spec: spec || dropDownSpec.value,
+      spec: spec || specList[dropDownSpec.value],
     });
     const data = await response.data;
     if (data.name) {
@@ -62,6 +64,7 @@ showResolutionBtn.addEventListener('click', async () => {
   try {
     const response = await authClient.client.get(`/resolution/?name=${inputForSearchResolution.value}`);
     const data = await response.data;
+    console.log(data);
 
     tableForResolution1.remove();
     const tableForResolution = document.createElement('table');
@@ -97,7 +100,7 @@ showResolutionBtn.addEventListener('click', async () => {
     tableForResolution.appendChild(tr);
 
     data.resolutions.forEach((elem) => {
-      const arr = elem.createdAt.split('T');
+      const arr = elem.createdat.split('T');
       const time = arr[1].substr(0, 8);
 
       const tr = document.createElement('tr');
@@ -110,15 +113,15 @@ showResolutionBtn.addEventListener('click', async () => {
       tr.appendChild(contentTd);
 
       const specTd = document.createElement('td');
-      specTd.innerHTML = elem.speciality;
+      specTd.innerHTML = elem.specialization;
       tr.appendChild(specTd);
 
       const patientNameTd = document.createElement('td');
-      patientNameTd.innerHTML = elem.patient.name;
+      patientNameTd.innerHTML = elem.name;
       tr.appendChild(patientNameTd);
 
       const createdByTd = document.createElement('td');
-      createdByTd.innerHTML = elem.doctor.name;
+      createdByTd.innerHTML = elem.doctor;
       tr.appendChild(createdByTd);
 
       const createdAtTd = document.createElement('td');
@@ -145,9 +148,10 @@ deleteResolutionBtn.addEventListener('click', async () => {
 window.addEventListener('load', async () => {
   try {
     const response = await authClient.client('/doctor/specialities');
-    const specialities = await response.data;//await response.json();
+    const specialities = await response.data;
     if (specialities.length > 1) {
       specialities.forEach((elem) => {
+        specList[elem.name] = elem.id;
         const opt = document.createElement('option');
         opt.innerHTML = elem.name;
         dropDownSpec.appendChild(opt);
@@ -157,6 +161,6 @@ window.addEventListener('load', async () => {
       spec = specialities[0].name;
     }
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err.response.data || err);
   }
 });

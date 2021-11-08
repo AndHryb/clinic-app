@@ -1,17 +1,14 @@
 import * as httpMocks from 'node-mocks-http';
-import SequelizeMock from 'sequelize-mock';
 import { STATUSES, MESSAGES } from '../../../constants.js';
 import UserController from '../controller/user-controller.js';
 import UserService from '../service/user-service.js';
-import UserSqlRepository from '../repository/user-sql-repository.js';
-import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
+import UserRepository from '../repository/user-pg-repository.js';
+import PatientRepository from '../../patient/repository/patient-pg-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
-const { usersSQLDB, patientsSQLDB } = new SequelizeMock();
-
-const userSqlRepository = new UserSqlRepository(usersSQLDB);
-const patientSqlRepository = new PatientSqlRepository(patientsSQLDB);
-const userService = new UserService(userSqlRepository, patientSqlRepository);
+const userRepository = new UserRepository();
+const patientRepository = new PatientRepository();
+const userService = new UserService(userRepository, patientRepository);
 const userController = new UserController(userService);
 
 jest.mock('../service/user-service.js');
