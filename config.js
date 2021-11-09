@@ -15,7 +15,7 @@ const sql = {
 };
 const redis = {
   port: process.env.REDIS_PORT || 6379,
-  host: process.env.REDDIS_HOST || '127.0.0.1',
+  host: process.env.REDIS_HOST || '127.0.0.1',
   ttl: process.env.DOC_LIST_TTL || 600,
 };
 const envConfig = {
