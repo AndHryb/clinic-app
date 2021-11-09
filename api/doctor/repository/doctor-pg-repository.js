@@ -65,7 +65,25 @@ export default class DoctorPgRepository {
                  JOIN specializations s
                  ON ds.specializationId = s.id`;
     const res = await this.pool.query(sql);
-    return res.rows;
+
+    const docs = {};
+    for (const elem of res.rows) {
+      if (elem.id in docs) {
+        docs[elem.id].specialties.push(
+          { name: elem.specname },
+        );
+      } else {
+        const val = {
+          id: elem.id,
+          name: elem.name,
+          specialties: [{
+            name: elem.specname,
+          }],
+        };
+        docs[elem.id] = val;
+      }
+    }
+    return Object.values(docs);
   }
 
   async getByUserId(userId) {

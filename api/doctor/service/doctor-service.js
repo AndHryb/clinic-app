@@ -68,7 +68,7 @@ export default class DoctorService {
   async getDoctors() {
     try {
       const cache = await this.doctorRedisRepository.getAll();
-      if (cache && !(cache.length === 0)) {
+      if (cache && cache.length !== 0) {
         console.log(clc.red('cahed data'));
         return cache;
       }

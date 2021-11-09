@@ -120,7 +120,8 @@ window.addEventListener('load', async () => {
 
     const spec = new Set();
     doctors.forEach((elem) => {
-      spec.add(elem.specname);
+      const { specialties } = elem;
+      specialties.forEach((elem1) => spec.add(elem1.name));
     });
 
     for (const elem of spec) {
@@ -133,8 +134,10 @@ window.addEventListener('load', async () => {
     function createDoctors(event) {
       const dropDownDoc = document.getElementById('doctors-list');
       const spec = event.target.value;
-      const docList = doctors.filter((elem) =>
-        (elem.specname === spec));
+      const docList = doctors.filter((elem) => {
+        const { specialties } = elem;
+        return specialties.find((elem) => elem.name === spec);
+      });
 
       dropDownDoc.remove();
       const select = document.createElement('select');

@@ -102,19 +102,9 @@ export default class DoctorRedisRepository {
   async setData(data) {
     try {
       const hashSet = promisify(this.client.hset).bind(this.client);
+      console.log(data);
       for (const elem of data) {
-        const specs = [];
-        for (const spec of elem.specialties) {
-          specs.push({ name: spec.name });
-        }
-
-        const docData = {
-          id: elem.id,
-          name: elem.name,
-          specialties: specs,
-        };
-
-        await hashSet(this.doctorHash, elem.id, JSON.stringify(docData));
+        await hashSet(this.doctorHash, elem.id, JSON.stringify(elem));
       }
       this.setTTL(this.doctorHash);
       return data;
