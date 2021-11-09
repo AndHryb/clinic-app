@@ -4,18 +4,20 @@ import patientModel from '../../models/patient-model.js';
 import resolutionModel from '../../models/resolution-model.js';
 import userModel from '../../models/user-model.js';
 import doctorModel from '../../models/doctor-model.js';
-import specialityModel from '../../models/speciality-model.js';
+import specModel from '../../models/spec-model.js';
 import { envConfig } from '../../config.js';
 
 const { Sequelize } = pkg;
 
 export default function sequelizeInit() {
-  const sequelize = new Sequelize(process.env.SQL_DB, process.env.SQL_USER, ''/* process.env.SQL_PASSWORD */, {
-    dialect: 'mysql',
-    host: envConfig.storage.SQLHost,
-    port: envConfig.storage.SQLPort,
-    database: process.env.SQL_DB,
-  });
+  const sequelize = new Sequelize(
+    envConfig.sql.database, envConfig.sql.user, envConfig.sql.password, {
+      dialect: 'mysql',
+      host: envConfig.sql.host,
+      port: envConfig.sql.port,
+      database: envConfig.sql.database,
+    },
+  );
 
   try {
     sequelize.authenticate();
@@ -29,7 +31,7 @@ export default function sequelizeInit() {
     resolutionModel,
     userModel,
     doctorModel,
-    specialityModel,
+    specModel,
   ];
 
   for (const modelDefiner of modelDefiners) {

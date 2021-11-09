@@ -3,3 +3,4 @@
 .eslintrc.*
 package-lock.*
 /.vs/
+/.vscode

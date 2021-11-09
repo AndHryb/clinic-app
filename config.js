@@ -2,36 +2,26 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const env = process.env.NODE_ENV;
-console.log(`process.env = ${process.env.NODE_ENV}`);
-
-const test = {
-  app: {
-    port: process.env.PORT || 3000,
-  },
-  storage: {
-    name: process.env.TEST_REPOSITORY,
-    host: process.env.REPOSITORY_HOST,
-    port: 6379,
-  },
+const app = {
+  port: process.env.PORT || 3000,
 };
 const sql = {
-  app: {
-    port: process.env.PORT || 3000,
-  },
-  storage: {
-    name: 'SQL',
-    host: process.env.REPOSITORY_HOST,
-    port: 6379,
-    SQLPort: 3306,
-    SQLHost: process.env.SQL_HOST,
-    SQLDialect: 'mysql',
-  },
+  port: process.env.SQL_PORT || 3306,
+  host: process.env.SQL_HOST || '127.0.0.1',
+  database: process.env.SQL_DB || 'clinic_db',
+  user: process.env.SQL_USER || 'root',
+  password: process.env.SQL_PASSWORD || '',
+  dialect: 'mysql',
 };
-const config = {
-  test,
+const redis = {
+  port: process.env.REDIS_PORT || 6379,
+  host: process.env.REDDIS_HOST || '127.0.0.1',
+  ttl: process.env.DOC_LIST_TTL || 600,
+};
+const envConfig = {
+  app,
   sql,
+  redis,
 };
-const envConfig = config[env];
 
 export { envConfig };

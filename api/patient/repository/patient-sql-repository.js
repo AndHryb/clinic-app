@@ -1,19 +1,39 @@
 export default class PatientSqlRepository {
-  constructor(patients, resolutions) {
-    this.patientsModel = patients;
-    this.resolutionsModel = resolutions;
+  constructor(sequelize, patientModel, resolutionModel, userModel) {
+    this.sequelize = sequelize;
+    this.patientModel = patientModel;
+    this.resolutionModel = resolutionModel;
+    this.userModel = userModel;
   }
 
-  async add(options) {
-    const patient = await this.patientsModel.create({
-      ...options,
-    });
+  async create(options) {
+    try {
+      const result = await this.sequelize.transaction(async (t) => {
+        const user = await this.userModel.create({
+          email: options.email,
+          password: options.password,
+          role: options.role,
+        }, { transaction: t });
 
-    return patient;
+        const patient = await this.patientModel.create({
+          name: options.name,
+          email: options.email,
+          gender: options.gender,
+          birthday: options.birthday,
+          userId: user.id,
+        }, { transaction: t });
+
+        return { entity: patient, user };
+      });
+      return result;
+    } catch (err) {
+      console.log(`Patient repository create error ${err.message}`);
+      throw err;
+    }
   }
 
   async getByName(name) {
-    const patientlist = await this.patientsModel.findAll({
+    const patientlist = await this.patientModel.findAll({
       where: {
         name,
       },
@@ -26,7 +46,7 @@ export default class PatientSqlRepository {
   }
 
   async getById(patientId) {
-    const patient = await this.patientsModel.findOne({
+    const patient = await this.patientModel.findOne({
       where: {
         id: patientId,
       },
@@ -39,7 +59,7 @@ export default class PatientSqlRepository {
   }
 
   async delete(patientID) {
-    const deleteValue = await this.patientsModel.destroy({
+    const deleteValue = await this.patientModel.destroy({
       where: {
         id: patientID,
       },
@@ -48,7 +68,7 @@ export default class PatientSqlRepository {
   }
 
   async getByUserId(userId) {
-    const patient = await this.patientsModel.findOne({
+    const patient = await this.patientModel.findOne({
       where: {
         userId,
       },

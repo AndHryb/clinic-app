@@ -1,14 +1,13 @@
 import pkg from 'sequelize';
-import { creator } from '../../helpers/dbSeed.js';
 
 const { DataTypes } = pkg;
 
 export default function applyExtraSetup(sequelize) {
   const {
-    resolutionsSQLDB, patientsSQLDB, usersSQLDB, doctorsSQLDB, specialtiesSQLDB,
+    resolutions, patients, users, doctors, specializations,
   } = sequelize.models;
 
-  patientsSQLDB.hasMany(resolutionsSQLDB, {
+  patients.hasMany(resolutions, {
     foreignKey: {
       name: 'patientId',
       type: DataTypes.UUID,
@@ -16,7 +15,7 @@ export default function applyExtraSetup(sequelize) {
     },
   });
 
-  doctorsSQLDB.hasMany(resolutionsSQLDB, {
+  doctors.hasMany(resolutions, {
     foreignKey: {
       name: 'doctorId',
       type: DataTypes.UUID,
@@ -24,14 +23,14 @@ export default function applyExtraSetup(sequelize) {
     },
   });
 
-  resolutionsSQLDB.belongsTo(doctorsSQLDB, {
+  resolutions.belongsTo(doctors, {
     as: 'doctor',
   });
-  resolutionsSQLDB.belongsTo(patientsSQLDB, {
+  resolutions.belongsTo(patients, {
     as: 'patient',
   });
 
-  patientsSQLDB.belongsTo(usersSQLDB, {
+  patients.belongsTo(users, {
     foreignKey: {
       name: 'userId',
       type: DataTypes.UUID,
@@ -39,7 +38,7 @@ export default function applyExtraSetup(sequelize) {
     },
   });
 
-  doctorsSQLDB.belongsTo(usersSQLDB, {
+  doctors.belongsTo(users, {
     foreignKey: {
       name: 'userId',
       type: DataTypes.UUID,
@@ -47,18 +46,35 @@ export default function applyExtraSetup(sequelize) {
     },
   });
 
-  doctorsSQLDB.belongsToMany(specialtiesSQLDB, {
-    through: 'Doctors_Specialities',
+  const doctorSpecModel = sequelize.define('doctorsSpecializations', {
+    doctorId: {
+      type: DataTypes.UUID,
+      references: {
+        model: doctors,
+        key: 'id',
+      },
+    },
+
+    specializationId: {
+      type: DataTypes.UUID,
+      references: {
+        model: specializations,
+        key: 'id',
+      },
+    },
+  });
+
+  doctors.belongsToMany(specializations, {
+    through: doctorSpecModel,
     as: 'specialties',
   });
 
-  specialtiesSQLDB.belongsToMany(doctorsSQLDB, {
-    through: 'Doctors_Specialities',
+  specializations.belongsToMany(doctors, {
+    through: doctorSpecModel,
     as: 'doctors',
   });
 
-  sequelize.sync({ force: true })
+  sequelize.sync({ /* force: true */ })
     .then(() => console.log('sync'))
-    .then(() => creator(doctorsSQLDB, usersSQLDB, specialtiesSQLDB))
     .catch((error) => console.log('This error occurred', error));
 }

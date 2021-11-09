@@ -1,3 +1,6 @@
+import ApiError from '../../../middleware/error-handling/ApiError.js';
+import { MESSAGES } from '../../../constants.js';
+
 export default class QueueService {
   constructor(patientRepository, queueRepository, doctorRepository) {
     this.patientRepository = patientRepository;
@@ -8,26 +11,24 @@ export default class QueueService {
   async get(docId) {
     try {
       const result = await this.queueRepository.get(docId);
-      if (!result) {
-        return false;
-      }
+      if (!result) throw ApiError.notFound(MESSAGES.QUEUE_EMPTY);
       const patient = await this.patientRepository.getById(result);
 
       return patient.name;
     } catch (err) {
       console.log(`Queue Service get error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 
   async add(patientId, docId) {
     try {
       const result = await this.queueRepository.add(patientId, docId);
-      if (result) {
-        return result;
-      }
-      return false;
+
+      return result;
     } catch (err) {
       console.log(`QueueService add error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 
@@ -36,6 +37,7 @@ export default class QueueService {
       return await this.queueRepository.delete();
     } catch (err) {
       console.log(`QueueService delete error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 
@@ -44,6 +46,7 @@ export default class QueueService {
       return await this.queueRepository.getLength();
     } catch (err) {
       console.log(`QueueService getLength error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 
@@ -54,7 +57,6 @@ export default class QueueService {
       const queues = [];
       for (const elem of keys) {
         const docdata = await this.doctorRepository.getById(elem);
-
         const patientData = await this.patientRepository.getById(data[elem].next);
         queues.push({
           doctor: docdata.name,
@@ -63,9 +65,12 @@ export default class QueueService {
         });
       }
 
+      if (queues.length === 0) throw ApiError.notFound(MESSAGES.ALL_QUEUES_EMPTY);
+
       return queues;
     } catch (err) {
       console.log(`QueueService getAll error : ${err.name} : ${err.message}`);
+      throw err;
     }
   }
 }

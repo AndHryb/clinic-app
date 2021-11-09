@@ -3,7 +3,7 @@ import pkg from 'sequelize';
 const { DataTypes, UUIDV4 } = pkg;
 
 export default function userModel(sequelize) {
-  const model = sequelize.define('usersSQLDB', {
+  const model = sequelize.define('users', {
     id: {
       type: DataTypes.UUID,
       defaultValue: UUIDV4,
@@ -13,15 +13,16 @@ export default function userModel(sequelize) {
 
     email: {
       type: DataTypes.STRING,
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
     },
+    role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   });
-/*
-  model.sync({ alter: true })
-    .then(() => console.log('usersSQLDB table has been successfully created, if one doesn\'t exist'))
-    .catch((error) => console.log('This error occurred', error));*/
 
   return model;
 }
