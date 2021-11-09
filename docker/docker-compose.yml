@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    image: anhryb/clinic-app:latest
+    image: anhryb/clinic-app-pg:latest
     container_name: clinic
     command: npm start
     ports:
@@ -11,56 +11,58 @@ services:
     volumes:
       - ./:/clinic-app
     environment:
-      NODE_ENV: sql
-      QUEUE_REPOSITORY: redis
-      TEST_REPOSITORY: memory
+      NODE_ENV: dev
       PORT: 3000
       TTL: 30000
-      REPOSITORY_HOST: redis
-      SQL_PASSWORD: 143234
-      SQL_HOST: db
+      REDIS_HOST: redis
+      PG_HOST: db
+      PG_USER: anhryb
+      PG_PORT: 5432
+      PG_PASSWORD: 143234
+      PG_DB: clinic_db
       JWT_TTL: 600
       JWT_KEY: 2hrtn1
+      SALT: 10
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
   db:
-    image: mysql:8.0
-    command: '--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci'
-    ports:
-     - 3306:3306
-    restart: always
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent" ]
-      interval: 3s
-      retries: 5
-      start_period: 30s
-    volumes:
-    - my-sql-data:/var/lib/mysql
+    image: postgres:13.3
     environment:
-      - MYSQL_ROOT_PASSWORD=143234
-      - MYSQL_DATABASE=clinic_db
+      POSTGRES_DB: "clinic_db"
+      POSTGRES_USER: "anhryb"
+      POSTGRES_PASSWORD: "143234"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ../helpers/migraions:/docker-entrypoint-initdb.d
+      - pg-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anhryb -d clinic_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
   redis:
     image: redis:6.2
+    container_name: redis
     restart: always
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 1s
       timeout: 3s
-      retries: 30
-  flyway:
-    image: flyway/flyway
-    command: -url=jdbc:mysql://db:3306 -schemas=myschema -user=root -password=143234 -connectRetries=60 migrate
-    volumes:
-      - ./flyway/config:/flyway/conf
-      - ./flyway/sql:/flyway/sql
-    depends_on:
-       db:
-        condition: service_healthy   
+      retries: 30   
 volumes:
-    my-sql-data:
+    pg-data:
 
 
 

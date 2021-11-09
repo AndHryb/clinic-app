@@ -19,6 +19,9 @@ import redisInit from './config-data-bases/redis/redis-init.js';
 import { TTL } from './constants.js';
 
 import pool from './config-data-bases/postgres/postgres-init.js';
+import envConfig from './config.js';
+
+console.log(envConfig);
 
 class Injector {
   constructor(mode) {
@@ -30,7 +33,7 @@ class Injector {
       this.doctorRedisRepository = new DoctorRedisRepository();
       this.queueRepository = new QueueRedisRepository();
     } else {
-      const redisClient = redisInit();
+      const redisClient = redisInit(envConfig.redis.port, envConfig.redis.host);
       this.resolutionRepository = new ResolutionPgRepository(pool);
       this.patientRepository = new PatienPgRepository(pool);
       this.userRepository = new UserPgRepository(pool);

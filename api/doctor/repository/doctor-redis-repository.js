@@ -1,5 +1,5 @@
 import { promisify } from 'util';
-import { envConfig } from '../../../config.js';
+import envConfig from '../../../config.js';
 
 export default class DoctorRedisRepository {
   constructor(redisClient) {
