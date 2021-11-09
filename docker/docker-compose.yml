@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  app:
+    image: anhryb/clinic-app:latest
+    container_name: clinic
+    command: npm start
+    ports:
+    - 3000:3000
+    working_dir: /app
+    volumes:
+      - ./:/clinic-app
+    environment:
+      NODE_ENV: sql
+      QUEUE_REPOSITORY: redis
+      TEST_REPOSITORY: memory
+      PORT: 3000
+      TTL: 30000
+      REPOSITORY_HOST: redis
+      SQL_PASSWORD: 143234
+      SQL_HOST: db
+      JWT_TTL: 600
+      JWT_KEY: 2hrtn1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  db:
+    image: mysql:8.0
+    command: '--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci'
+    ports:
+     - 3306:3306
+    restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent" ]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    volumes:
+    - my-sql-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=143234
+      - MYSQL_DATABASE=clinic_db
+  redis:
+    image: redis:6.2
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  flyway:
+    image: flyway/flyway
+    command: -url=jdbc:mysql://db:3306 -schemas=myschema -user=root -password=143234 -connectRetries=60 migrate
+    volumes:
+      - ./flyway/config:/flyway/conf
+      - ./flyway/sql:/flyway/sql
+    depends_on:
+       db:
+        condition: service_healthy   
+volumes:
+    my-sql-data:
+
+
+
+

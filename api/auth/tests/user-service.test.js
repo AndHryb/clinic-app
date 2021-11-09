@@ -1,122 +1,323 @@
 import bcrypt from 'bcryptjs';
-import SequelizeMock from 'sequelize-mock';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 import UserService from '../service/user-service.js';
-import UserSqlRepository from '../repository/user-sql-repository.js';
-import PatientSqlRepository from '../../patient/repository/patient-sql-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-// import decodeToken from '../../../helpers/decode-token.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
+import UserRepository from '../repository/user-pg-repository.js';
+import PatientSqlRepository from '../../patient/repository/patient-pg-repository.js';
+import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
+import DoctorRedisRepository from '../../doctor/repository/doctor-redis-repository.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
+import { MESSAGES, STATUSES } from '../../../constants.js';
 
-const patientsSQLDBMock = new SequelizeMock();
-const usersSQLDBMock = new SequelizeMock();
-const doctorSQLDBMock = new SequelizeMock();
-
-const patientSqlRepository = new PatientSqlRepository(patientsSQLDBMock);
-const userSqlRepository = new UserSqlRepository(usersSQLDBMock);
-const doctorSqlRepository = new DoctorRepository(doctorSQLDBMock);
-const userService = new UserService(userSqlRepository, patientSqlRepository, doctorSqlRepository);
-
-jest.mock('../repository/user-sql-repository.js');
-jest.mock('../../patient/repository/patient-sql-repository.js');
-jest.mock('../../doctor/repository/doctor.repository.js');
-jest.mock('../../../helpers/decode-token.js');
-jest.mock('bcryptjs');
-jest.mock('jsonwebtoken');
+const patientRepository = new PatientSqlRepository();
+const userRepository = new UserRepository();
+const doctorRepository = new DoctorRepository();
+const doctorRedisRepository = new DoctorRedisRepository();
+const userService = new UserService(
+  userRepository,
+  patientRepository,
+  doctorRepository,
+  doctorRedisRepository,
+);
 
 describe('user service unit test', () => {
-  const testTime = new Date().getTime();
-  const regData = {
-    email: 'andryigr@gmail.com',
-    password: '1111',
-    name: 'Andrei',
-    birthday: 730080000000,
-    gender: 'male',
-  };
-  const userData = {
-    id: '333',
-    email: 'aaa@list',
-    password: '000',
-    createdAt: testTime,
-    updatedAt: testTime,
-  };
-  const patientData = {
-    id: '111',
-    name: 'Andrei',
-    birthday: 730080000000,
-    gender: 'male',
-    userId: '333',
-    createdAt: testTime,
-    updatedAt: testTime,
-  };
-  const payload = {
-    userId: '222',
-    role: 'patient',
-  };
+  let testTime;
+  let regDataPatient;
+  let regDataDoctor;
+  let userDataPatient;
+  let userDataDoctor;
+  let patientData;
+  let doctorData;
+  let payload;
+  let regResPatient;
+  let regResDoctor;
+  let serverErr;
+  let myError;
 
-  userService.getToken = jest.fn(() => 'valid_token_111');
+  beforeEach(() => {
+    dotenv.config();
+    testTime = new Date().getTime();
+    regDataPatient = {
+      email: 'aaa@list',
+      password: '1111',
+      name: 'Andrei',
+      birthday: 730080000000,
+      gender: 'male',
+      role: 'patient',
+    };
+    regDataDoctor = {
+      email: 'aaa@list',
+      password: '1111',
+      name: 'Andrei',
+      role: 'doctor',
+      specNames: ['surgery', 'gynecology'],
+    };
 
-  test('registration test', async () => {
-    userSqlRepository.checkEmail.mockResolvedValue(false);
-    //bcrypt.genSaltSync.mockResolvedValue(10);
-    //bcrypt.hashSync.mockResolvedValue(1111);
-    userSqlRepository.add.mockResolvedValue(userData);
-    patientSqlRepository.add.mockResolvedValue(patientData);
-    const res = await userService.registration(regData);
-    expect(res).toEqual('valid_token_111');
+    userDataPatient = {
+      id: '333',
+      email: 'aaa@list',
+      password: '1111',
+      role: 'patient',
+      createdAt: testTime,
+      updatedAt: testTime,
+    };
+    userDataDoctor = {
+      id: '333',
+      email: 'aaa@list',
+      password: '1111',
+      role: 'doctor',
+      createdAt: testTime,
+      updatedAt: testTime,
+    };
+    patientData = {
+      id: '111',
+      name: 'Andrei',
+      birthday: 730080000000,
+      gender: 'male',
+      userId: '333',
+      createdAt: testTime,
+      updatedAt: testTime,
+    };
+    doctorData = {
+      id: '111',
+      name: 'Andrei',
+      userId: '333',
+      createdAt: testTime,
+      updatedAt: testTime,
+    };
+    payload = {
+      userId: '222',
+      role: 'patient',
+    };
+    regResPatient = {
+      entity: patientData,
+      user: userDataPatient,
+    };
+
+    regResDoctor = {
+      entity: doctorData,
+      user: userDataDoctor,
+    };
+    serverErr = new Error('some error');
+    myError = ApiError.forbidden('foo');
   });
 
-  test('registration test(email in base)', async () => {
-    userSqlRepository.checkEmail.mockResolvedValue(true);
-    const res = await userService.registration(regData);
-    expect(res).toEqual(false);
+  test('registration test(patient role)', async () => {
+    userRepository.getByEmail = jest.fn(() => false);
+    patientRepository.create = jest.fn(() => regResPatient);
+    doctorRepository.create = jest.fn();
+    doctorRedisRepository.add = jest.fn();
+    const res = await userService.registration(regDataPatient);
+    expect(res.entity).toEqual(patientData);
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
+    expect(doctorRepository.create).not.toHaveBeenCalled();
+    expect(doctorRedisRepository.add).not.toHaveBeenCalled();
   });
 
-  test('login', async () => {
-    userSqlRepository.checkEmail.mockResolvedValue(userData);
-    bcrypt.compareSync.mockResolvedValue(true);
-    const res = await userService.login(regData);
-    expect(res).toEqual({ email: true, password: true, token: 'valid_token_111' });
+  test('registration test (doctor role)', async () => {
+    userRepository.getByEmail = jest.fn(() => false);
+    doctorRepository.create = jest.fn(() => regResDoctor);
+    doctorRedisRepository.add = jest.fn(() => true);
+    patientRepository.create = jest.fn();
+    const res = await userService.registration(regDataDoctor);
+    expect(res.entity).toEqual(doctorData);
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'doctor',
+        userId: '333',
+      });
+    expect(patientRepository.create).not.toHaveBeenCalled();
+  });
+
+  test('registration test(email in base doctor case)', async () => {
+    try {
+      userRepository.getByEmail = jest.fn(() => true);
+      doctorRepository.create = jest.fn();
+      doctorRedisRepository.add = jest.fn();
+      await userService.registration(regDataDoctor);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe(MESSAGES.EMAIL_EXIST);
+      expect(err.statusCode).toBe(STATUSES.Conflict);
+      expect(doctorRepository.create).not.toHaveBeenCalled();
+      expect(doctorRedisRepository.add).not.toHaveBeenCalled();
+    }
+  });
+
+  test('registration test(email in base patient case)', async () => {
+    try {
+      userRepository.getByEmail = jest.fn(() => true);
+      patientRepository.create = jest.fn();
+      await userService.registration(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe(MESSAGES.EMAIL_EXIST);
+      expect(err.statusCode).toBe(STATUSES.Conflict);
+      expect(patientRepository.create).not.toHaveBeenCalled();
+    }
+  });
+
+  test('registration test(some error)', async () => {
+    try {
+      userRepository.getByEmail = jest.fn(() => { throw serverErr; });
+      await userService.registration(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
+  test('login (patient case)', async () => {
+    const salt = bcrypt.genSaltSync(10);
+    userDataPatient.password = bcrypt.hashSync(userDataPatient.password, salt);
+    userRepository.getByEmail = jest.fn(() => userDataPatient);
+    const res = await userService.login(regDataPatient);
+    expect(res.role).toEqual('patient');
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
+  });
+
+  test('login (doctor case)', async () => {
+    const salt = bcrypt.genSaltSync(10);
+    userDataDoctor.password = bcrypt.hashSync(userDataDoctor.password, salt);
+    userRepository.getByEmail = jest.fn(() => userDataDoctor);
+    const res = await userService.login(regDataDoctor);
+    expect(res.role).toEqual('doctor');
+    expect(jwt.verify(res.token, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'doctor',
+        userId: '333',
+      });
   });
 
   test('login, email doesn\'t match', async () => {
-    userSqlRepository.checkEmail.mockResolvedValue(false);
-    bcrypt.compareSync = jest.fn(() => true);
-    jwt.sign.mockResolvedValue('111');
-    const res = await userService.login(regData);
-    expect(res).toEqual({ email: false, password: false, token: undefined });
+    try {
+      userRepository.getByEmail = jest.fn(() => false);
+      await userService.login(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe(MESSAGES.EMAIL_NOT_FOUND);
+      expect(err.statusCode).toBe(STATUSES.Unauthorized);
+    }
   });
 
   test('login, password doesn\'t match', async () => {
-    userSqlRepository.checkEmail.mockResolvedValue(userData);
-    bcrypt.compareSync = jest.fn(() => false);
-    const res = await userService.login(regData);
-    expect(res).toEqual({ email: true, password: false, token: undefined });
+    try {
+      userRepository.getByEmail = jest.fn(() => userDataPatient);
+      bcrypt.compareSync = jest.fn(() => false);
+      await userService.login(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe(MESSAGES.PASSWORD_NOT_MATCH);
+      expect(err.statusCode).toBe(STATUSES.Unauthorized);
+    }
   });
 
-  test('get by token ', async () => {
-    await checkJwtToken.mockResolvedValue(payload);
-    patientSqlRepository.getByUserId.mockResolvedValue(patientData);
-    const res = await userService.getByToken('111fff');
-    expect(res).toEqual(patientData);
-  });
-
-  test('get by token, id doesn\'t match', async () => {
-    checkJwtToken.mockResolvedValue(userData);
-    patientSqlRepository.getByUserId.mockResolvedValue(false);
-    const res = await userService.getByToken('111fff');
-    expect(res).toEqual(undefined);
+  test('login,(some error)', async () => {
+    try {
+      userRepository.getByEmail = jest.fn(() => userDataPatient);
+      bcrypt.compareSync = jest.fn(() => { throw serverErr; });
+      await userService.login(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 
   test('get by userId ', async () => {
-    patientSqlRepository.getByUserId.mockResolvedValue(patientData);
-    const res = await userService.getByUserId('111');
+    patientRepository.getByUserId = jest.fn(() => patientData);
+    const res = await userService.getByUserId(payload);
     expect(res).toEqual(patientData);
   });
 
   test('get by userId, doesn\'t match ', async () => {
-    patientSqlRepository.getByUserId.mockResolvedValue(false);
-    const res = await userService.getByUserId('111');
+    patientRepository.getByUserId = jest.fn(() => false);
+    const res = await userService.getByUserId(payload);
     expect(res).toEqual(false);
+  });
+
+  test('get by userId, some error ', async () => {
+    try {
+      patientRepository.getByUserId = jest.fn(() => { throw serverErr; });
+      await userService.getByUserId(payload);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
+  test('get by userId, handled error ', async () => {
+    try {
+      patientRepository.getByUserId = jest.fn(() => { throw myError; });
+      await userService.getByUserId(payload);
+    } catch (err) {
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.message).toBe('foo');
+    }
+  });
+
+  test('create token ', async () => {
+    const res = UserService.createToken(userDataPatient);
+    expect(jwt.verify(res, process.env.JWT_KEY, (err, decoded) => decoded))
+      .toMatchObject({
+        email: 'aaa@list',
+        role: 'patient',
+        userId: '333',
+      });
+  });
+
+  test('create token(some error) ', async () => {
+    try {
+      jwt.sign = jest.fn(() => { throw serverErr; });
+      UserService.createToken(userDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
+  test('create patient ', async () => {
+    patientRepository.create = jest.fn(() => regResPatient);
+    const res = await userService.createPatient(regDataPatient);
+    expect(res.entity).toEqual(patientData);
+    expect(res.user).toEqual(userDataPatient);
+  });
+
+  test('create patient (some error)', async () => {
+    try {
+      patientRepository.create = jest.fn(() => { throw serverErr; });
+      await userService.createPatient(regDataPatient);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
+  });
+
+  test('create doctor ', async () => {
+    doctorRepository.create = jest.fn(() => regResDoctor);
+    const res = await userService.createDoctor(regDataDoctor);
+    expect(res.entity).toEqual(doctorData);
+    expect(res.user).toEqual(userDataDoctor);
+  });
+
+  test('create doctor (some error)', async () => {
+    try {
+      doctorRepository.create = jest.fn(() => { throw serverErr; });
+      await userService.createDoctor(regDataDoctor);
+    } catch (err) {
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('some error');
+    }
   });
 });

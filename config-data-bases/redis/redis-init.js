@@ -2,12 +2,13 @@ import redis from 'redis';
 import { envConfig } from '../../config.js';
 
 function redisInit() {
-  const client = redis.createClient(envConfig.storage.port, envConfig.storage.host);
+  const client = redis.createClient(envConfig.redis.port, envConfig.redis.host);
   client.on('connect', () => {
     console.log('redis storage connected!');
   });
-  client.on('error', (error) => {
-    console.error(error);
+  client.on('error', (err) => {
+    console.error(err);
+    throw err;
   });
   client.select(0);
   client.flushdb();

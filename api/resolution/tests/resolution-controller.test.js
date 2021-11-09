@@ -1,43 +1,44 @@
 import * as httpMocks from 'node-mocks-http';
-import SequelizeMock from 'sequelize-mock';
-import { STATUSES, NO_RIGHT_TO_DELETE_MSG} from '../../../constants.js';
+import { STATUSES, MESSAGES } from '../../../constants.js';
 import ResolutionController from '../controllers/resolution-controller.js';
 import ResolutionService from '../service/resolution-service.js';
-import DoctorService from '../../doctor/service/doctor.service.js';
-import ResolutionSqlRepository from '../repository/resolution-sql-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor.repository.js';
-import checkJwtToken from '../../../helpers/decode-token.js';
+import DoctorService from '../../doctor/service/doctor-service.js';
+import ResolutionRepository from '../repository/resolution-pg-repository.js';
+import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
+import ApiError from '../../../middleware/error-handling/ApiError.js';
 
-const resolutionsSQLDB = new SequelizeMock();
-const doctorSQLDB = new SequelizeMock();
-
-const doctorSQLRepository = new DoctorRepository(doctorSQLDB);
-const resolutionSqlRepository = new ResolutionSqlRepository(resolutionsSQLDB);
+const doctorSQLRepository = new DoctorRepository();
+const resolutionSqlRepository = new ResolutionRepository();
 
 const resolutionService = new ResolutionService(resolutionSqlRepository);
 const doctorService = new DoctorService(doctorSQLRepository);
 const resolutionController = new ResolutionController(resolutionService, doctorService);
 
 jest.mock('../service/resolution-service.js');
-jest.mock('../../doctor/service/doctor.service.js');
-jest.mock('../../../helpers/decode-token.js');
+jest.mock('../../doctor/service/doctor-service.js');
 
 describe('resolution controller unit test', () => {
-  let resolutionData1, 
-      patientData1, 
-      patientData2,
-      docData,
-      req,
-      res,
-      patientList = [];
+  let resolutionData1;
+  let patientData1;
+  let patientData2;
+  let docData;
+  let req;
+  let res;
+  let patientList = [];
+  let serverErr;
+  let myError;
+  let next;
   const testRegTime = (new Date()).getTime();
-  const resolutionId = '111';
-  const resolutionVal = 'schizophrenia';
-  const myErr1 = new Error('not found');
-  const myErr2 = new Error(NO_RIGHT_TO_DELETE_MSG);
-  
 
   beforeEach(() => {
+    next = jest.fn();
+    const payload = {
+      email: 'aaa@aaa',
+      userId: '111',
+      role: 'patient',
+    };
+    myError = ApiError.notFound('foo');
+    serverErr = new Error('some error');
     resolutionData1 = {
       resolutionId: '111',
       patienId: '222',
@@ -69,102 +70,109 @@ describe('resolution controller unit test', () => {
       method: 'GET',
       url: '/some_url',
       headers: {
-        cookie: 'doctorToken=111'
+        cookie: 'doctorToken=111',
       },
-      body:{docID: '111'}
+      body: { docID: '111' },
+      payload,
     });
     res = httpMocks.createResponse();
   });
 
   test('get resolutions by name', async () => {
     resolutionService.getResolutionsByName.mockResolvedValue(patientList);
-    await resolutionController.getResolutionsByName(req,res);
+    await resolutionController.getResolutionsByName(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.OK);
     expect(res._getJSONData()).toEqual({
       resolutions: patientList,
-      message: `${patientList.length} patient(s) were found`,
     });
   });
 
   test('get resolution by name(patient storage hasn\'t this name)', async () => {
-    resolutionService.getResolutionsByName.mockResolvedValue(false);
-    await resolutionController.getResolutionsByName(req,res);
-    expect(res.statusCode).toEqual(STATUSES.NotFound);
-    expect(res._getJSONData()).toEqual({
-      message: `The patient ${req.query.name} not found in the database`,
-    });
+    resolutionService.getResolutionsByName = jest.fn(() => { throw myError; });
+    await resolutionController.getResolutionsByName(req, res, next);
+    expect(resolutionService.getResolutionsByName).toThrow(myError);
+    expect(next).toHaveBeenCalledWith(myError);
+  });
+
+  test('get resolution by name(server error)', async () => {
+    resolutionService.getResolutionsByName = jest.fn(() => { throw serverErr; });
+    await resolutionController.getResolutionsByName(req, res, next);
+    expect(resolutionService.getResolutionsByName).toThrow(serverErr);
+    expect(next).toHaveBeenCalledWith(serverErr);
   });
 
   test('add resolution data(queueRepository has patient)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     resolutionService.addResolution.mockResolvedValue(patientData1);
-    await resolutionController.addResolution(req,res);
+    await resolutionController.addResolution(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.Created);
     expect(res._getJSONData()).toEqual(
-      patientData1
+      patientData1,
     );
   });
 
-  test('add resolution data(queue empty hasn\'t patient)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
-    doctorService.getByUserId.mockResolvedValue(docData);
-    resolutionService.addResolution.mockResolvedValue(false);
-    await resolutionController.addResolution(req,res);
-    expect(res.statusCode).toEqual(STATUSES.Conflict);
-    expect(res._getJSONData()).toEqual({
-      message: 'Can\'t added resolution. There is no one in the queueRepository'
-    });
+  test('add resolution data(queue empty)', async () => {
+    doctorService.getByUserId = jest.fn(() => { throw myError; });
+    await resolutionController.addResolution(req, res, next);
+    expect(doctorService.getByUserId).toThrow(myError);
+    expect(next).toHaveBeenCalledWith(myError);
+  });
+
+  test('add resolution data(server error)', async () => {
+    doctorService.getByUserId = jest.fn(() => { throw serverErr; });
+    await resolutionController.addResolution(req, res, next);
+    expect(doctorService.getByUserId).toThrow(serverErr);
+    expect(next).toHaveBeenCalledWith(serverErr);
   });
 
   test('delete resolution data(storage has key)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
     doctorService.getByUserId.mockResolvedValue(docData);
     resolutionService.delete.mockResolvedValue(patientData2);
-    await resolutionController.deleteResolution(req, res);
+    await resolutionController.deleteResolution(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.NoContent);
     expect(res._getJSONData()).toEqual({
-      message: `The resolution  ${req.body.value} deleted`
+      message: MESSAGES.RESOLUTION_DELETED,
+      resolution: {
+        name: 'Bob',
+        regTime: testRegTime,
+      },
     });
   });
 
-  test('delete resolution data(not found in dstabase)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
+  test('delete resolution data(not found in dstabase or no right to delete)', async () => {
     doctorService.getByUserId.mockResolvedValue(docData);
-    resolutionService.delete.mockResolvedValue(myErr1);
-    await resolutionController.deleteResolution(req, res);
-    expect(res.statusCode).toEqual(STATUSES.NotFound);
-    expect(res._getJSONData()).toEqual({
-      message: `The resolution ${req.body.value} not found in the database`
-    });
+    resolutionService.delete = jest.fn(() => { throw myError; });
+    await resolutionController.deleteResolution(req, res, next);
+    expect(resolutionService.delete).toThrow(myError);
+    expect(next).toHaveBeenCalledWith(myError);
   });
 
-  test('delete resolution data(no right to delete)', async () => {
-    checkJwtToken.mockResolvedValue({ userID: '222' });
+  test('delete resolution data(server error)', async () => {
     doctorService.getByUserId.mockResolvedValue(docData);
-    resolutionService.delete.mockResolvedValue(myErr2);
-    await resolutionController.deleteResolution(req, res);
-    expect(res.statusCode).toEqual(STATUSES.Forbidden);
-    expect(res._getJSONData()).toEqual({
-      message: NO_RIGHT_TO_DELETE_MSG,
-    });
+    resolutionService.delete = jest.fn(() => { throw serverErr; });
+    await resolutionController.deleteResolution(req, res, next);
+    expect(resolutionService.delete).toThrow(serverErr);
+    expect(next).toHaveBeenCalledWith(serverErr);
   });
 
   test('get resolution by token (token valid)', async () => {
-    req.headers.cookie = 'token=111';
-    resolutionService.getResolutionByToken.mockResolvedValue(resolutionData1);
-    await resolutionController.getResolutionByToken(req, res);
+    resolutionService.getResolutionByUserId.mockResolvedValue(resolutionData1);
+    await resolutionController.getResolutionByToken(req, res, next);
     expect(res.statusCode).toEqual(STATUSES.OK);
-    expect(res._getJSONData()).toEqual({resolution: resolutionData1});
+    expect(res._getJSONData()).toEqual({ resolution: resolutionData1 });
   });
 
   test('get resolution by token (token invalid)', async () => {
-    req.headers.cookie = 'token=111';
-    resolutionService.getResolutionByToken.mockResolvedValue(false);
-    await resolutionController.getResolutionByToken(req, res);
-    expect(res.statusCode).toEqual(STATUSES.NotFound);
-    expect(res._getJSONData()).toEqual({
-      message: 'The resolution not found in the database.Make an appointment with a doctor.'
-    });
+    resolutionService.getResolutionByUserId = jest.fn(() => { throw myError; });
+    await resolutionController.getResolutionByToken(req, res, next);
+    expect(resolutionService.getResolutionByUserId).toThrow(myError);
+    expect(next).toHaveBeenCalledWith(myError);
+  });
+
+  test('get resolution by token (server error)', async () => {
+    resolutionService.getResolutionByUserId = jest.fn(() => { throw serverErr; });
+    await resolutionController.getResolutionByToken(req, res, next);
+    expect(resolutionService.getResolutionByUserId).toThrow(serverErr);
+    expect(next).toHaveBeenCalledWith(serverErr);
   });
 });
