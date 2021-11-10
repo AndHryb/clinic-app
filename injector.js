@@ -21,8 +21,6 @@ import { TTL } from './constants.js';
 import pool from './config-data-bases/postgres/postgres-init.js';
 import envConfig from './config.js';
 
-console.log(envConfig);
-
 class Injector {
   constructor(mode) {
     if (mode === 'test') {

@@ -1,0 +1,1 @@
+psql -v ON_ERROR_STOP=1 --username "anhryb" --dbname "clinic_db"
