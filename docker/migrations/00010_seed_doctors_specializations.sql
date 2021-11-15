@@ -1,4 +1,4 @@
-INSERT INTO doctors_specializations (doctorId, specializationId) VALUES
+INSERT INTO doctors_specializations (doctor_id, specialization_id) VALUES
 ('024fb036-c0b7-4974-8ec1-b6253d2cfe37', 'a6922e11-daca-4eee-966e-1cda2a172ba1'),
 ('0e9473aa-b76f-4a70-b265-ab6267aa2bd0', 'a6922e11-daca-4eee-966e-1cda2a172ba1'),
 ('0e9473aa-b76f-4a70-b265-ab6267aa2bd0', 'b5208eea-01c2-4976-ab83-5dc0023e554d'),

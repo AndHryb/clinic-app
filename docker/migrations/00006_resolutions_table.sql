@@ -1,19 +1,19 @@
 CREATE TABLE IF NOT EXISTS resolutions (
   id varchar(255),
   resolution varchar(255) NOT NULL,
-  specializationId varchar(255) NOT NULL,
-  createdAt timestamp NOT NULL,
-  updatedAt timestamp NOT NULL,
-  patientId varchar(255),
-  doctorId varchar(255),
+  specialization_id varchar(255) NOT NULL,
+  created_at timestamp NOT NULL,
+  updated_at timestamp NOT NULL,
+  patient_id varchar(255),
+  doctor_id varchar(255),
   PRIMARY KEY (id),
-  FOREIGN KEY (patientId) REFERENCES patients(id)
+  FOREIGN KEY (patient_id) REFERENCES patients(id)
   ON UPDATE CASCADE
   ON DELETE CASCADE,
-  FOREIGN KEY (doctorId) REFERENCES doctors(id)
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id)
   ON UPDATE CASCADE
   ON DELETE CASCADE,
-  FOREIGN KEY (specializationId) REFERENCES specializations(id)
+  FOREIGN KEY (specialization_id) REFERENCES specializations(id)
   ON UPDATE CASCADE
   ON DELETE CASCADE
 );
