@@ -1,6 +1,6 @@
 import * as httpMocks from 'node-mocks-http';
-import DoctorController from '../controller/doctor-controller.js';
-import DoctorService from '../service/doctor-service.js';
+import DoctorController from '../doctor-controller.js';
+import DoctorService from '../doctor-service.js';
 import { STATUSES } from '../../../constants.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 

@@ -1,20 +1,20 @@
-import QueueController from './api/queue/controllers/queue-controller.js';
-import ResolutionController from './api/resolution/controllers/resolution-controller.js';
-import UserController from './api/auth/controller/user-controller.js';
-import DoctorController from './api/doctor/controller/doctor-controller.js';
+import QueueController from './api/queue/queue-controller.js';
+import ResolutionController from './api/resolution/resolution-controller.js';
+import UserController from './api/auth/user-controller.js';
+import DoctorController from './api/doctor/doctor-controller.js';
 
-import QueueService from './api/queue/service/queue-service.js';
-import ResolutionService from './api/resolution/service/resolution-service.js';
-import UserService from './api/auth/service/user-service.js';
-import DoctorService from './api/doctor/service/doctor-service.js';
+import QueueService from './api/queue/queue-service.js';
+import ResolutionService from './api/resolution/resolution-service.js';
+import UserService from './api/auth/user-service.js';
+import DoctorService from './api/doctor/doctor-service.js';
 
-import UserPgRepository from './api/auth/repository/user-pg-repository.js';
-import DoctorPgRepository from './api/doctor/repository/doctor-pg-repository.js';
-import PatienPgRepository from './api/patient/repository/patient-pg-repository.js';
-import ResolutionPgRepository from './api/resolution/repository/resolution-pg-repository.js';
+import UserPgRepository from './api/auth/user-pg-repository.js';
+import DoctorPgRepository from './api/doctor/doctor-pg-repository.js';
+import PatienPgRepository from './api/patient/patient-pg-repository.js';
+import ResolutionPgRepository from './api/resolution/resolution-pg-repository.js';
 
-import QueueRedisRepository from './api/queue/repository/queue-redis-repository.js';
-import DoctorRedisRepository from './api/doctor/repository/doctor-redis-repository.js';
+import QueueRedisRepository from './api/queue/queue-redis-repository.js';
+import DoctorRedisRepository from './api/doctor/doctor-redis-repository.js';
 import redisInit from './config-data-bases/redis/redis-init.js';
 import { TTL } from './constants.js';
 
@@ -88,4 +88,4 @@ class Injector {
   }
 }
 const injector = new Injector(process.env.NODE_ENV);
-export { injector };
+export { injector as default };

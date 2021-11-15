@@ -1,4 +1,4 @@
-import { STATUSES, MESSAGES } from '../../../constants.js';
+import { STATUSES, MESSAGES } from '../../constants.js';
 
 export default class ResolutionController {
   constructor(resolutionService, doctorService) {
@@ -35,9 +35,13 @@ export default class ResolutionController {
     try {
       const { userId } = req.payload;
       const doc = await this.doctorService.getByUserId(userId);
-      const result = await this.resolutionService.addResolution(
-        req.body.value, doc.id, req.body.spec,
-      );
+      const options = {
+        resolution: req.body.value,
+        docId: doc.id,
+        specId: req.body.specId,
+        patientId: req.body.patientId,
+      };
+      const result = await this.resolutionService.addResolution(options);
       res.set('Content-Type', 'application/json;charset=utf-8');
       res.status(STATUSES.Created).json(result);
     } catch (err) {
@@ -49,7 +53,7 @@ export default class ResolutionController {
     try {
       const { userId } = req.payload;
       const { id } = await this.doctorService.getByUserId(userId);
-      const result = await this.resolutionService.delete(req.body.value, id);
+      const result = await this.resolutionService.delete(req.query.id, id);
       res.set('Content-Type', 'application/json;charset=utf-8');
       res.status(STATUSES.NoContent).json({
         message: MESSAGES.RESOLUTION_DELETED,

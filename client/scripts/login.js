@@ -64,11 +64,10 @@ document.reg_form.onsubmit = async function (EO) {
     if (result.role === 'patient') {
       document.cookie = `patient-token=${authClient.token};path=/;`;
       window.location = './patient.html';
-    }else if (result.role === 'doctor'){
+    } else if (result.role === 'doctor') {
       document.cookie = `doctor-token=${authClient.token};path=/;`;
       window.location = './doctor.html';
     }
-
   } catch (err) {
     console.log(err.response.data);
   }

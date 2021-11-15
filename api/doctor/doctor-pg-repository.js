@@ -16,12 +16,12 @@ export default class DoctorPgRepository {
                         ($1, $2, $3, $4);`;
       await client.query(sqlUsers, [userId, options.email, options.password, options.role]);
 
-      const sqlDoctors = `INSERT INTO doctors(id, name, email, userID) VALUES 
+      const sqlDoctors = `INSERT INTO doctors(id, name, email, user_id) VALUES 
                           ($1, $2, $3, $4);`;
       await client.query(sqlDoctors, [doctorId, options.name, options.email, userId]);
       for (const spec of specNames) {
-        const sqlSpecs = `INSERT INTO doctors_specializations (doctorId, specializationId)
-                        (SELECT $1 AS doctorid, s.id AS specializationid 
+        const sqlSpecs = `INSERT INTO doctors_specializations (doctor_id, specialization_id)
+                        (SELECT $1 AS doctor_id, s.id AS specialization_id 
                          FROM specializations s
                          WHERE s.name = $2);`;
         await client.query(sqlSpecs, [doctorId, spec]);
@@ -51,33 +51,40 @@ export default class DoctorPgRepository {
 
   async deleteById(id) {
     const sql = `DELETE FROM users CASCADE
-                  WHERE id =  (SELECT d.userid FROM doctors d WHERE d.id = $1);`;
+                  WHERE id =  (SELECT d.user_id FROM doctors d WHERE d.id = $1);`;
     await this.pool.query(sql, [id]);
     return id;
   }
 
   async getDoctors() {
-    const sql = `SELECT d.name, d.id, s.name as specName
+    const sql = `SELECT
+                 d.name,
+                 d.id, 
+                 s.name as "specName",
+                 s.id as "specId"
                  FROM 
                  doctors d
                  JOIN doctors_specializations ds
-                 ON d.id = ds.doctorId
+                 ON d.id = ds.doctor_id
                  JOIN specializations s
-                 ON ds.specializationId = s.id`;
+                 ON ds.specialization_id = s.id`;
     const res = await this.pool.query(sql);
-
     const docs = {};
     for (const elem of res.rows) {
       if (elem.id in docs) {
         docs[elem.id].specialties.push(
-          { name: elem.specname },
+          {
+            name: elem.specName,
+            id: elem.specId,
+          },
         );
       } else {
         const val = {
           id: elem.id,
           name: elem.name,
           specialties: [{
-            name: elem.specname,
+            name: elem.specName,
+            id: elem.specId,
           }],
         };
         docs[elem.id] = val;
@@ -89,7 +96,7 @@ export default class DoctorPgRepository {
   async getByUserId(userId) {
     const sql = `SELECT name, id
                  FROM doctors
-                 WHERE userId = $1;`;
+                 WHERE user_id = $1;`;
     const res = await this.pool.query(sql, [userId]);
     return res.rows[0];
   }
@@ -98,10 +105,10 @@ export default class DoctorPgRepository {
     const sql = `SELECT s.name, s.id
                  FROM specializations s
                  JOIN doctors_specializations ds
-                 ON ds.specializationId = s.id
+                 ON ds.specialization_id = s.id
                  JOIN doctors d
-                 ON ds.doctorId = d.id
-                 AND d.userId = $1;`;
+                 ON ds.doctor_id = d.id
+                 AND d.user_id = $1;`;
     const res = await this.pool.query(sql, [userId]);
 
     return res.rows;
@@ -112,7 +119,7 @@ export default class DoctorPgRepository {
                  FROM 
                  doctors d
                  JOIN doctors_specializations ds
-                 ON d.id = ds.doctorId
+                 ON d.id = ds.doctor_id
                  JOIN specializations s
                  ON ds.specializationId = s.id`;
     const res = await this.pool.query(sql, [docId]);
@@ -126,15 +133,15 @@ export default class DoctorPgRepository {
       await client.query('BEGIN');
       for (const spec of oldSpecsList) {
         const sqlDelOld = `DELETE FROM doctors_specializations ds
-                           WHERE specializationId = (
+                           WHERE specialization_id = (
                              SELECT s.id FROM specializations s
-                             WHERE doctorid = $1
+                             WHERE doctor_id = $1
                              AND s.name = $2);`;
         await client.query(sqlDelOld, [id, spec]);
       }
       for (const spec of newSpecsList) {
-        const sqlSpecs = `INSERT INTO doctors_specializations (doctorId, specializationId)
-                          (SELECT $1 AS doctorid, s.id AS specializationid 
+        const sqlSpecs = `INSERT INTO doctors_specializations (doctor_id, specialization_id)
+                          (SELECT $1 AS doctor_id, s.id AS specialization_id 
                            FROM specializations s
                            WHERE s.name = $2);`;
         await client.query(sqlSpecs, [id, spec]);
@@ -188,21 +195,21 @@ export default class DoctorPgRepository {
 
   async getAllDependencies(docId) {
     const docSql = `SELECT 
-                  d.name,
-                  d.userId,
-                  u.email,
-                  u.password
-                  FROM doctors d
-                  JOIN users u
-                  ON u.id = d.userId
-                  AND d.id = $1;`;
+                    d.name,
+                    d.user_id,
+                    u.email,
+                    u.password
+                    FROM doctors d
+                    JOIN users u
+                    ON u.id = d.user_id
+                    AND d.id = $1;`;
     const doctor = await this.pool.query(docSql, [docId]);
 
     const specsSQL = `SELECT s.name FROM
                       doctors_specializations ds
                       JOIN specializations s
-                      ON ds.specializationid = s.id
-                      AND $1 = ds.doctorId`;
+                      ON ds.specialization_id = s.id
+                      AND $1 = ds.doctor_id`;
     const specs = await this.pool.query(specsSQL, [docId]);
 
     return {

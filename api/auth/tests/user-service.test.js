@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import UserService from '../service/user-service.js';
-import UserRepository from '../repository/user-pg-repository.js';
-import PatientSqlRepository from '../../patient/repository/patient-pg-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
-import DoctorRedisRepository from '../../doctor/repository/doctor-redis-repository.js';
+import UserService from '../user-service.js';
+import UserRepository from '../user-pg-repository.js';
+import PatientSqlRepository from '../../patient/patient-pg-repository.js';
+import DoctorRepository from '../../doctor/doctor-pg-repository.js';
+import DoctorRedisRepository from '../../doctor/doctor-redis-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 import { MESSAGES, STATUSES } from '../../../constants.js';
 

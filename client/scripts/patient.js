@@ -15,7 +15,7 @@ addBtnForPatientName.addEventListener('click', async () => {
   const dropDownDoc = document.getElementById('doctors-list');
   try {
     const response = await authClient.client.post('/queue',
-      { docID: dropDownDoc.value, spec: dropDownSpec.value });
+      { docId: dropDownDoc.value, specId: dropDownSpec.value });
     const data = await response.data;
     console.log(data);
   } catch (err) {
@@ -45,6 +45,10 @@ window.addEventListener('load', async () => {
     next.innerHTML = 'next';
     head.appendChild(next);
 
+    const pos = document.createElement('th');
+    pos.innerHTML = 'position';
+    head.appendChild(pos);
+
     queueTable.appendChild(head);
 
     data.forEach((elem) => {
@@ -61,6 +65,15 @@ window.addEventListener('load', async () => {
       const nextVal = document.createElement('th');
       nextVal.innerHTML = elem.next;
       tr.appendChild(nextVal);
+
+      const posVal = document.createElement('th');
+      if (elem.position) {
+        posVal.innerHTML = elem.position;
+      } else {
+        posVal.innerHTML = '-';
+      }
+
+      tr.appendChild(posVal);
 
       queueTable.appendChild(tr);
     });
@@ -83,7 +96,7 @@ window.addEventListener('load', async () => {
 
     if (data.resolution.length > 0) {
       data.resolution.forEach((elem) => {
-        const arr = elem.createdat.split('T');
+        const arr = elem.createdAt.split('T');
         const time = arr[1].substr(0, 8);
 
         const tr = document.createElement('tr');
@@ -118,25 +131,31 @@ window.addEventListener('load', async () => {
 
     console.log(doctors);
 
-    const spec = new Set();
+    const spec = {};
     doctors.forEach((elem) => {
       const { specialties } = elem;
-      specialties.forEach((elem1) => spec.add(elem1.name));
+      specialties.forEach((elem1) => {
+        spec[elem1.id] = {
+          id: elem1.id,
+          name: elem1.name,
+        };
+      });
     });
 
-    for (const elem of spec) {
+    // eslint-disable-next-line guard-for-in
+    for (const elem in spec) {
       const opt = document.createElement('option');
-      opt.setAttribute('value', `${elem}`);
-      opt.innerHTML = elem;
+      opt.setAttribute('value', `${spec[elem].id}`);
+      opt.innerHTML = spec[elem].name;
       dropDownSpec.appendChild(opt);
     }
 
-    function createDoctors(event) {
+    const createDoctors = (event) => {
       const dropDownDoc = document.getElementById('doctors-list');
-      const spec = event.target.value;
+      const specId = event.target.value;
       const docList = doctors.filter((elem) => {
         const { specialties } = elem;
-        return specialties.find((elem) => elem.name === spec);
+        return specialties.find((elem) => elem.id === specId);
       });
 
       dropDownDoc.remove();
@@ -150,7 +169,7 @@ window.addEventListener('load', async () => {
         opt.innerHTML = elem.name;
         select.appendChild(opt);
       });
-    }
+    };
 
     dropDownSpec.addEventListener('change', createDoctors);
   } catch (err) {

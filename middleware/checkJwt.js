@@ -1,13 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { MESSAGES } from '../constants.js';
-import { injector } from '../injector.js';
+import injector from '../injector.js';
 import ApiError from './error-handling/ApiError.js';
 
 export default async function checkJWT(req, res, next) {
   try {
     let token;
     if (req.headers.authorization) {
-      token = req.headers.authorization.split(' ')[1];
+      [, token] = req.headers.authorization.split(' ');
+      if (!token) throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);
     } else {
       throw ApiError.unauthorized(MESSAGES.TOKEN_NOT_FOUND);
     }

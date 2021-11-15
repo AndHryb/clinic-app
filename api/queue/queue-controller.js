@@ -1,4 +1,4 @@
-import { STATUSES } from '../../../constants.js';
+import { STATUSES } from '../../constants.js';
 
 export default class QueueController {
   constructor(queueService, userService, doctorService) {
@@ -9,9 +9,9 @@ export default class QueueController {
 
   async addToQueue(req, res, next) {
     try {
-      const { docID } = req.body;
+      const { docId, specId } = req.body;
       const patient = await this.userService.getByUserId(req.payload);
-      const result = await this.queueService.add(patient.id, docID);
+      const result = await this.queueService.add(patient.id, docId, specId);
       res.status(STATUSES.Created).json(result);
     } catch (err) {
       next(err);
@@ -32,7 +32,8 @@ export default class QueueController {
 
   async getAllQueues(req, res, next) {
     try {
-      const result = await this.queueService.getAll();
+      const { userId } = req.payload;
+      const result = await this.queueService.getAll(userId);
       res.status(STATUSES.OK).json(result);
     } catch (err) {
       next(err);

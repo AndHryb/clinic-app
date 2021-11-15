@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
-import DoctorService from '../service/doctor-service.js';
-import DoctorRepository from '../repository/doctor-pg-repository.js';
-import DoctorRedisRepository from '../repository/doctor-redis-repository.js';
-import UserRepository from '../../auth/repository/user-pg-repository.js';
+import DoctorService from '../doctor-service.js';
+import DoctorRepository from '../doctor-pg-repository.js';
+import DoctorRedisRepository from '../doctor-redis-repository.js';
+import UserRepository from '../../auth/user-pg-repository.js';
 import { STATUSES, MESSAGES } from '../../../constants.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
@@ -11,7 +11,7 @@ const doctorService = new DoctorService(
   new DoctorRedisRepository(),
   new UserRepository(),
 );
-const { doctorRepository, doctorRedisRepository} = doctorService;
+const { doctorRepository, doctorRedisRepository } = doctorService;
 
 describe('doctor service have to', () => {
   const serverErr = new Error('some error');

@@ -1,11 +1,15 @@
 export default {
   type: 'object',
   properties: {
-    id: {
+    docId: {
+      type: 'string',
+      minLength: 10,
+    },
+    specId: {
       type: 'string',
       minLength: 10,
     },
   },
-  required: ['id'],
+  required: ['docId','specId'],
   additionalProperties: false,
 };

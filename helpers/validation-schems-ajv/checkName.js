@@ -1,13 +1,15 @@
 import { MAX_LENGTH, MIN_LENGTH } from '../../constants.js';
 
-export const checkNameSchema = {
-  type: 'string',
-  maxLength: MAX_LENGTH,
-  minLength: MIN_LENGTH,
-  pattern: '[a-zA-Z]+',
+export default {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      maxLength: MAX_LENGTH,
+      minLength: MIN_LENGTH,
+      pattern: '[a-zA-Z]+',
+    },
+  },
+  required: ['name'],
+  additionalProperties: false,
 };
-
-export const checkDocId = {
-  type: 'string',
-  minLength: 10,
-}

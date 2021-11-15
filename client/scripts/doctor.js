@@ -16,48 +16,51 @@ const showResolutionBtn = document.getElementById('show_resolution_btn');
 let tableForResolution1 = document.getElementById('table_for_doctor_resolution');
 const deleteResolutionBtn = document.getElementById('del_resolution_btn');
 const deleteResolutionID = document.getElementById('del_resolution_id');
-const dropDownSpec = document.getElementById('speciality-list');
-const spec = null;
-const specList = {};
-
-async function gettCurrent() {
-  try {
-    const response = await authClient.client.get('/queue/next');
-    const data = await response.data;
-    return data;
-  } catch (err) {
-    console.log(err.response.data);
-  }
-}
+const patientSpec = document.getElementById('speciality');
+let curPatientData;
+let specialities;
 
 nextBtnForDoctor.addEventListener('click', async () => {
   try {
     const response = await authClient.client.get('/queue/next');
     const data = await response.data;
-    displayPatientNameForDoctor.textContent = data;
+    curPatientData = data;
+    const specObj = specialities.find((elem) => curPatientData.specId === elem.id);
+    patientSpec.textContent = specObj.name;
+    const { name } = data;
+    displayPatientNameForDoctor.textContent = name;
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err.response.data || err);
   }
 });
 
 addBtnForResolution.addEventListener('click', async () => {
-  if (doctorResolution.value === '' || await gettCurrent() !== displayPatientNameForDoctor.textContent) {
-    return false;
+  if (doctorResolution.value === '') {
+    console.log('Fill resolution');
+    return;
+  }
+  if (doctorResolution.value === '' || !curPatientData) {
+    console.log('Befor adding resolution call next patient');
+    return;
   }
   try {
     const response = await authClient.client.post('/resolution', {
       value: doctorResolution.value,
-      spec: spec || specList[dropDownSpec.value],
+      specId: curPatientData.specId,
+      patientId: curPatientData.id,
     });
     const data = await response.data;
-    if (data.name) {
-      console.log(`Resolution for ${data.name} added`);
-    } else { console.log(data); }
+    console.log(data);
+    if (data) {
+      console.log(`Resolution ${data.id} added`);
+    }
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err.response.data || err);
   }
-
+  curPatientData = null;
   doctorResolution.value = '';
+  patientSpec.textContent = '';
+  displayPatientNameForDoctor.textContent = '';
 });
 
 showResolutionBtn.addEventListener('click', async () => {
@@ -71,7 +74,7 @@ showResolutionBtn.addEventListener('click', async () => {
     tableForResolution.setAttribute('class', 'resolution_table');
     tableForResolution.setAttribute('id', 'table_for_doctor_resolution');
 
-    const tr = document.createElement('tr');
+    let tr = document.createElement('tr');
 
     const th1 = document.createElement('th');
     th1.innerHTML = 'Resolution ID';
@@ -100,10 +103,10 @@ showResolutionBtn.addEventListener('click', async () => {
     tableForResolution.appendChild(tr);
 
     data.resolutions.forEach((elem) => {
-      const arr = elem.createdat.split('T');
+      const arr = elem.createdAt.split('T');
       const time = arr[1].substr(0, 8);
 
-      const tr = document.createElement('tr');
+      tr = document.createElement('tr');
       const idTd = document.createElement('td');
       idTd.innerHTML = elem.id;
       tr.appendChild(idTd);
@@ -133,33 +136,25 @@ showResolutionBtn.addEventListener('click', async () => {
     deleteResolutionBtn.before(tableForResolution);
     tableForResolution1 = tableForResolution;
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err.response.data || err);
   }
 });
+
 deleteResolutionBtn.addEventListener('click', async () => {
   try {
-    const response = await authClient.client.delete('/resolution', { data: { value: deleteResolutionID.value } });
+    console.log(deleteResolutionID.value);
+    const response = await authClient.client.delete(`/resolution/?id=${deleteResolutionID.value}`);
     const data = await response.data;
+    console.log(data);
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err.response.data || err);
   }
 });
 
 window.addEventListener('load', async () => {
   try {
     const response = await authClient.client('/doctor/specialities');
-    const specialities = await response.data;
-    if (specialities.length > 1) {
-      specialities.forEach((elem) => {
-        specList[elem.name] = elem.id;
-        const opt = document.createElement('option');
-        opt.innerHTML = elem.name;
-        dropDownSpec.appendChild(opt);
-      });
-      dropDownSpec.hidden = false;
-    } else {
-      spec = specialities[0].name;
-    }
+    specialities = await response.data;
   } catch (err) {
     console.log(err.response.data || err);
   }

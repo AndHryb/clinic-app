@@ -1,19 +1,19 @@
 import express from 'express';
 import path from 'path';
-import bodyParser from 'body-parser';
-import doctorRouter from './routes/doctor-router.js';
-import resolutionRouter from './routes/resolution-router.js';
-import queueRouter from './routes/queue-router.js';
+
+import doctorRouter from './api/doctor/doctor-router.js';
+import resolutionRouter from './api/resolution/resolution-router.js';
+import queueRouter from './api/queue/queue-router.js';
 import envConfig from './config.js';
-import userRouter from './routes/user-router.js';
+import userRouter from './api/auth/user-router.js';
 import apiErrorHandler from './middleware/error-handling/api-error-handler.js';
 import checkJWT from './middleware/checkJwt.js';
 
 const app = express();
-const __dirname = path.resolve();
+const dirname = path.resolve();
 
-app.use(express.static(path.resolve(__dirname, 'client')));
-app.use(bodyParser.json({ strict: false }));
+app.use(express.static(path.resolve(dirname, 'client')));
+app.use(express.json());
 
 app.use('/auth', userRouter);
 

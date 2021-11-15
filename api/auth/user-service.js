@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import clc from 'cli-color';
-import { USER_TYPE, MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error-handling/ApiError.js';
+import { USER_TYPE, MESSAGES } from '../../constants.js';
+import ApiError from '../../middleware/error-handling/ApiError.js';
 
 export default class UserService {
   constructor(

@@ -1,13 +1,13 @@
 import * as httpMocks from 'node-mocks-http';
 import redis from 'redis-mock';
 import { STATUSES } from '../../../constants.js';
-import QueueController from '../controllers/queue-controller.js';
-import QueueService from '../service/queue-service.js';
-import UserService from '../../auth/service/user-service.js';
-import DoctorService from '../../doctor/service/doctor-service.js';
-import QueueRedisRepository from '../repository/queue-redis-repository.js';
-import UserRepository from '../../auth/repository/user-pg-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
+import QueueController from '../queue-controller.js';
+import QueueService from '../queue-service.js';
+import UserService from '../../auth/user-service.js';
+import DoctorService from '../../doctor/doctor-service.js';
+import QueueRedisRepository from '../queue-redis-repository.js';
+import UserRepository from '../../auth/user-pg-repository.js';
+import DoctorRepository from '../../doctor/doctor-pg-repository.js';
 
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
@@ -22,9 +22,9 @@ const doctorService = new DoctorService(doctorRepository);
 const userService = new UserService(userRepository);
 const queueController = new QueueController(queueService, userService, doctorService);
 
-jest.mock('../../auth/service/user-service.js');// UserService
-jest.mock('../service/queue-service.js');// QueueService
-jest.mock('../../doctor/service/doctor-service.js');// DoctorService
+jest.mock('../../auth/user-service.js');// UserService
+jest.mock('../queue-service.js');// QueueService
+jest.mock('../../doctor/doctor-service.js');// DoctorService
 
 const docData = { id: '444', name: 'Sergei' };
 
@@ -49,7 +49,7 @@ describe('queue controller unit tests', () => {
       headers: {
         cookie: 'doctorToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
       },
-      payload: payload,
+      payload,
     });
     res = httpMocks.createResponse();
   });

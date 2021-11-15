@@ -1,5 +1,5 @@
-import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error-handling/ApiError.js';
+import { MESSAGES } from '../../constants.js';
+import ApiError from '../../middleware/error-handling/ApiError.js';
 
 export default class ResolutionService {
   constructor(queueRepository, resolutionRepository, patientRepository, TTL) {
@@ -23,7 +23,6 @@ export default class ResolutionService {
 
   async getResolutionByUserId(userId) {
     try {
-      // const patient = await this.patientRepository.getByUserId(userId);
       const result = await this.resolutionRepository.getByPatientId(userId);
       const filtredList = this.filterTTL(result);
 
@@ -34,17 +33,22 @@ export default class ResolutionService {
     }
   }
 
-  async addResolution(resolution, docId, spec) {
+  async addResolution(options) {
     try {
+      const {
+        resolution, docId, specId, patientId,
+      } = options;
       const queueLength = await this.queueRepository.getLength(`q${docId}`);
       if (queueLength === 0) throw ApiError.conflict(MESSAGES.QUEUE_EMPTY);
-      const patientId = await this.queueRepository.delete(docId);
-      if (!patientId) throw ApiError.notFound(MESSAGES.NO_PATIENT);
-      await this.resolutionRepository.add({
-        patientId, resolution, docId, spec,
-      });// заменить spec на  id!!!! на  клиенте!!!
+      const delPatient = await this.queueRepository.delete(docId);
+      if (!delPatient || delPatient.patientId !== patientId) {
+        throw ApiError.notFound(MESSAGES.NO_PATIENT);
+      }
+      const res = await this.resolutionRepository.add({
+        patientId, resolution, docId, specId,
+      });
 
-      return patientId;
+      return res;
     } catch (err) {
       console.log(`Resolution service addResolution error :${err.name} : ${err.message}`);
       throw err;
@@ -69,9 +73,8 @@ export default class ResolutionService {
     try {
       const resolution = await this.resolutionRepository.getById(resolutionId);
       if (!resolution) throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
-      const { doctorid } = resolution;
-
-      return doctorid === docId;
+      const { doctorId } = resolution;
+      return doctorId === docId;
     } catch (err) {
       console.log(`Resolution service isTheRightDoctor error :${err.name} : ${err.message}`);
       throw err;
@@ -83,7 +86,7 @@ export default class ResolutionService {
       throw ApiError.notFound(MESSAGES.RESOLUTIONS_NOT_FOUND);
     }
     const filtredList = resolutionList.filter((elem) => {
-      const timeOfExistence = (new Date()).getTime() - (new Date(elem.createdat)).getTime();
+      const timeOfExistence = (new Date()).getTime() - (new Date(elem.createdAt)).getTime();
       return this.TTL > timeOfExistence;
     });
     if (!filtredList || filtredList.length === 0) {

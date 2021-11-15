@@ -15,7 +15,7 @@ export default class PatienPgRepository {
                         ($1, $2, $3, $4);`;
       await client.query(sqlUsers, [userId, options.email, options.password, options.role]);
 
-      const sqlPatients = `INSERT INTO patients(id, name, gender, birthday, userID) VALUES 
+      const sqlPatients = `INSERT INTO patients(id, name, gender, birthday, user_id) VALUES 
                             ($1, $2, $3, $4, $5);`;
       await client.query(sqlPatients, [
         patientId, options.name, options.gender, options.birthday, userId]);
@@ -64,7 +64,7 @@ export default class PatienPgRepository {
 
   async getByUserId(userId) {
     const sql = `SELECT * FROM patients
-                 WHERE userId = $1;`;
+                 WHERE user_id = $1;`;
     const res = await this.pool.query(sql, [userId]);
     return res.rows[0];
   }

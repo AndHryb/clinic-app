@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import clc from 'cli-color';
 
-import { MESSAGES } from '../../../constants.js';
-import ApiError from '../../../middleware/error-handling/ApiError.js';
+import { MESSAGES } from '../../constants.js';
+import ApiError from '../../middleware/error-handling/ApiError.js';
 
 export default class DoctorService {
   constructor(doctorRepository, doctorRedisRepository) {

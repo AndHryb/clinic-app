@@ -1,9 +1,9 @@
 import * as httpMocks from 'node-mocks-http';
 import { STATUSES, MESSAGES } from '../../../constants.js';
-import UserController from '../controller/user-controller.js';
-import UserService from '../service/user-service.js';
-import UserRepository from '../repository/user-pg-repository.js';
-import PatientRepository from '../../patient/repository/patient-pg-repository.js';
+import UserController from '../user-controller.js';
+import UserService from '../user-service.js';
+import UserRepository from '../user-pg-repository.js';
+import PatientRepository from '../../patient/patient-pg-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const userRepository = new UserRepository();
@@ -11,7 +11,7 @@ const patientRepository = new PatientRepository();
 const userService = new UserService(userRepository, patientRepository);
 const userController = new UserController(userService);
 
-jest.mock('../service/user-service.js');
+jest.mock('../user-service.js');
 
 describe('user controller unit test', () => {
   let regResData;

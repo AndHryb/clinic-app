@@ -1,5 +1,5 @@
 import { promisify } from 'util';
-import envConfig from '../../../config.js';
+import envConfig from '../../config.js';
 
 export default class DoctorRedisRepository {
   constructor(redisClient) {
@@ -102,7 +102,6 @@ export default class DoctorRedisRepository {
   async setData(data) {
     try {
       const hashSet = promisify(this.client.hset).bind(this.client);
-      console.log(data);
       for (const elem of data) {
         await hashSet(this.doctorHash, elem.id, JSON.stringify(elem));
       }

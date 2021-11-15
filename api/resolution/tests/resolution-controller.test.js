@@ -1,10 +1,10 @@
 import * as httpMocks from 'node-mocks-http';
 import { STATUSES, MESSAGES } from '../../../constants.js';
-import ResolutionController from '../controllers/resolution-controller.js';
-import ResolutionService from '../service/resolution-service.js';
-import DoctorService from '../../doctor/service/doctor-service.js';
-import ResolutionRepository from '../repository/resolution-pg-repository.js';
-import DoctorRepository from '../../doctor/repository/doctor-pg-repository.js';
+import ResolutionController from '../resolution-controller.js';
+import ResolutionService from '../resolution-service.js';
+import DoctorService from '../../doctor/doctor-service.js';
+import ResolutionRepository from '../resolution-pg-repository.js';
+import DoctorRepository from '../../doctor/doctor-pg-repository.js';
 import ApiError from '../../../middleware/error-handling/ApiError.js';
 
 const doctorSQLRepository = new DoctorRepository();
@@ -14,8 +14,8 @@ const resolutionService = new ResolutionService(resolutionSqlRepository);
 const doctorService = new DoctorService(doctorSQLRepository);
 const resolutionController = new ResolutionController(resolutionService, doctorService);
 
-jest.mock('../service/resolution-service.js');
-jest.mock('../../doctor/service/doctor-service.js');
+jest.mock('../resolution-service.js');
+jest.mock('../../doctor/doctor-service.js');
 
 describe('resolution controller unit test', () => {
   let resolutionData1;

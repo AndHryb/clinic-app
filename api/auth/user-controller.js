@@ -1,4 +1,4 @@
-import { STATUSES, MESSAGES } from '../../../constants.js';
+import { STATUSES, MESSAGES } from '../../constants.js';
 
 export default class UserController {
   constructor(userService) {
